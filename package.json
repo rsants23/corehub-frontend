@@ -4,9 +4,9 @@
   "private": true,
   "description": "Efata CoreHub — frontend do sistema de remanejamento automático de agenda",
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev --turbopack -p 80",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 80",
     "lint": "next lint"
   },
   "dependencies": {

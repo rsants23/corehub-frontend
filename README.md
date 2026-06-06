@@ -18,7 +18,9 @@ npm install
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Acesse [http://localhost](http://localhost) (porta 80).
+
+> A porta 80 pode exigir execução do terminal como administrador no Windows.
 
 **Login mock:** `coordenacao@clinica.com` / `123456`
 
@@ -39,11 +41,18 @@ src/
 
 ## Integração com backend
 
-Configure a URL da API em `.env`:
+Configure em `.env`:
 
 ```
+PORT=80
 NEXT_PUBLIC_API_URL=http://localhost:3100/api
 ```
+
+| Serviço  | URL |
+|----------|-----|
+| Frontend | http://localhost |
+| API      | http://localhost:3100/api |
+| Swagger  | http://localhost:3100/docs |
 
 Os serviços por módulo usam `USE_MOCK = true`. Para integrar com a API, altere para `false` em cada `*.service.ts`.
 
