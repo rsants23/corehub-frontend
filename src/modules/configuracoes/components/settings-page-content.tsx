@@ -508,6 +508,11 @@ export function SettingsPageContent() {
       )}
 
       {activeTab === "usuarios" && (
+        <div className="space-y-4">
+          <Badge variant="outline">
+            Rascunho local — alterações não persistem no backend (use /usuarios
+            para gestão real)
+          </Badge>
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
@@ -564,6 +569,7 @@ export function SettingsPageContent() {
               </div>
             </CardContent>
           </Card>
+        </div>
         </div>
       )}
 

@@ -1,6 +1,5 @@
 import { API_BASE_URL } from "@/constants/api";
 import {
-  ApiError,
   createConnectionError,
   normalizeApiError,
   type NestJsErrorBody,
