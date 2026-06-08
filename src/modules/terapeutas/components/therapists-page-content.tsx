@@ -52,7 +52,7 @@ export function TherapistsPageContent() {
       setEditingTherapist(null);
       setDialogOpen(false);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao salvar terapeuta"));
+      showToast(getErrorMessage(err, "Erro ao salvar terapeuta"), "error");
     }
   };
 
@@ -64,7 +64,7 @@ export function TherapistsPageContent() {
       showToast("Terapeuta desativado com sucesso");
       setTherapistToRemove(null);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao desativar terapeuta"));
+      showToast(getErrorMessage(err, "Erro ao desativar terapeuta"), "error");
     }
   };
 

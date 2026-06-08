@@ -52,7 +52,7 @@ export function AbsencesPageContent() {
       }
       showToast("Falta registrada com sucesso");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao registrar falta"));
+      showToast(getErrorMessage(err, "Erro ao registrar falta"), "error");
     }
   };
 
@@ -61,7 +61,7 @@ export function AbsencesPageContent() {
       await generateDaily.mutateAsync(date);
       showToast("Agenda do dia gerada com sucesso");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao gerar agenda do dia"));
+      showToast(getErrorMessage(err, "Erro ao gerar agenda do dia"), "error");
     }
   };
 

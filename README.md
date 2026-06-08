@@ -61,11 +61,7 @@ Autenticação via **CNPJ + e-mail + senha** → JWT armazenado em `localStorage
 
 ### Credenciais de desenvolvimento
 
-| Campo | Valor |
-|-------|-------|
-| CNPJ | `00000000000000` |
-| E-mail | `admin@efata.local` |
-| Senha | `Admin@123456` |
+Use os valores definidos no seed da API (`SEED_CNPJ`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` em `corehub-api/.env`). Após `npm run db:setup`, o terminal exibe CNPJ e e-mail — **não use credenciais hardcoded no frontend**.
 
 O CNPJ é normalizado para 14 dígitos antes do envio. Após login, o token é enviado automaticamente como `Authorization: Bearer` em todas as requisições. Em 401, a sessão é encerrada e o usuário redirecionado para `/login`.
 

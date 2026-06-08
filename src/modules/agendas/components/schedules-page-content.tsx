@@ -46,7 +46,7 @@ export function SchedulesPageContent() {
       await generateDaily.mutateAsync(today);
       showToast("Agenda diária gerada com sucesso");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao gerar agenda diária"));
+      showToast(getErrorMessage(err, "Erro ao gerar agenda diária"), "error");
     }
   };
 
@@ -75,7 +75,7 @@ export function SchedulesPageContent() {
       setEditingSchedule(null);
       setDialogOpen(false);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao salvar horário fixo"));
+      showToast(getErrorMessage(err, "Erro ao salvar horário fixo"), "error");
     }
   };
 
@@ -87,7 +87,7 @@ export function SchedulesPageContent() {
       showToast("Horário fixo removido com sucesso");
       setScheduleToRemove(null);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao remover horário fixo"));
+      showToast(getErrorMessage(err, "Erro ao remover horário fixo"), "error");
     }
   };
 

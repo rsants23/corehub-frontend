@@ -19,7 +19,12 @@ export function useSettings() {
     queryFn: () => settingsService.getCounts(),
   });
 
-  return { therapyTypes, counts };
+  const clinic = useQuery({
+    queryKey: ["clinic", "me"],
+    queryFn: () => settingsService.getClinic(),
+  });
+
+  return { therapyTypes, counts, clinic };
 }
 
 export function useTherapistSkills(therapistId: string | null) {
@@ -53,5 +58,12 @@ export function useSettingsMutations() {
     },
   });
 
-  return { createTherapyType, linkTherapistSkill };
+  const updateClinic = useMutation({
+    mutationFn: settingsService.updateClinic,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clinic", "me"] });
+    },
+  });
+
+  return { createTherapyType, linkTherapistSkill, updateClinic };
 }

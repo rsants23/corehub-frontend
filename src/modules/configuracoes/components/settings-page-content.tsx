@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Building2,
   HeartPulse,
@@ -80,12 +80,15 @@ const PERMISSION_LABELS: Record<string, string> = {
 export function SettingsPageContent() {
   const showToast = useToastStore((state) => state.showToast);
   const [activeTab, setActiveTab] = useState<SettingsTab>("clinica");
-  const { therapyTypes, counts } = useSettings();
-  const { createTherapyType, linkTherapistSkill } = useSettingsMutations();
+  const { therapyTypes, counts, clinic: clinicQuery } = useSettings();
+  const { createTherapyType, linkTherapistSkill, updateClinic } =
+    useSettingsMutations();
   const { data: therapists } = useTherapists();
 
-  const clinic = useClinicSettingsStore((state) => state.clinic);
-  const updateClinic = useClinicSettingsStore((state) => state.updateClinic);
+  const localClinicDraft = useClinicSettingsStore((state) => state.clinic);
+  const updateLocalClinicDraft = useClinicSettingsStore(
+    (state) => state.updateClinic,
+  );
   const convenios = useClinicSettingsStore((state) => state.convenios);
   const addConvenio = useClinicSettingsStore((state) => state.addConvenio);
   const toggleConvenio = useClinicSettingsStore((state) => state.toggleConvenio);
@@ -98,7 +101,25 @@ export function SettingsPageContent() {
   const user = useAuthStore((state) => state.user);
   const updateUser = useAuthStore((state) => state.updateUser);
 
-  const [clinicForm, setClinicForm] = useState(clinic);
+  const [clinicForm, setClinicForm] = useState({
+    name: "",
+    cnpj: "",
+    phone: "",
+    email: "",
+    address: localClinicDraft.address,
+  });
+
+  useEffect(() => {
+    if (clinicQuery.data) {
+      setClinicForm((prev) => ({
+        ...prev,
+        name: clinicQuery.data.tradeName,
+        cnpj: clinicQuery.data.cnpj,
+        phone: clinicQuery.data.phone ?? "",
+        email: clinicQuery.data.email ?? "",
+      }));
+    }
+  }, [clinicQuery.data]);
   const [newConvenio, setNewConvenio] = useState("");
   const [therapyForm, setTherapyForm] = useState({
     name: "",
@@ -118,14 +139,24 @@ export function SettingsPageContent() {
   const isLoading = therapyTypes.isLoading || counts.isLoading;
   const isError = therapyTypes.isError || counts.isError;
 
-  const handleSaveClinic = () => {
-    updateClinic(clinicForm);
-    showToast("Dados da clínica salvos");
+  const handleSaveClinic = async () => {
+    try {
+      await updateClinic.mutateAsync({
+        tradeName: clinicForm.name.trim(),
+        legalName: clinicForm.name.trim(),
+        phone: clinicForm.phone.trim() || undefined,
+        email: clinicForm.email.trim() || undefined,
+      });
+      updateLocalClinicDraft({ address: clinicForm.address });
+      showToast("Dados da clínica salvos no servidor", "success");
+    } catch (err) {
+      showToast(getErrorMessage(err, "Erro ao salvar dados da clínica"), "error");
+    }
   };
 
   const handleCreateTherapyType = async () => {
     if (!therapyForm.name.trim()) {
-      showToast("Informe o nome do tipo de terapia");
+      showToast("Informe o nome do tipo de terapia", "error");
       return;
     }
     try {
@@ -137,13 +168,13 @@ export function SettingsPageContent() {
       setTherapyForm({ name: "", description: "", durationMinutes: "50" });
       showToast("Tipo de terapia cadastrado");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao cadastrar tipo de terapia"));
+      showToast(getErrorMessage(err, "Erro ao cadastrar tipo de terapia"), "error");
     }
   };
 
   const handleLinkSkill = async () => {
     if (!selectedTherapistId || !selectedTherapyTypeId) {
-      showToast("Selecione terapeuta e tipo de terapia");
+      showToast("Selecione terapeuta e tipo de terapia", "error");
       return;
     }
     try {
@@ -154,7 +185,7 @@ export function SettingsPageContent() {
       setSelectedTherapyTypeId("");
       showToast("Especialidade vinculada ao terapeuta");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao vincular especialidade"));
+      showToast(getErrorMessage(err, "Erro ao vincular especialidade"), "error");
     }
   };
 
@@ -163,14 +194,14 @@ export function SettingsPageContent() {
       name: userForm.name.trim() || user?.name,
       email: userForm.email.trim() || user?.email,
     });
-    showToast("Dados do usuário atualizados");
+    showToast("Nome e e-mail atualizados apenas nesta sessão (rascunho local)", "success");
   };
 
   const handleAddConvenio = () => {
     if (!newConvenio.trim()) return;
     addConvenio(newConvenio.trim());
     setNewConvenio("");
-    showToast("Convênio adicionado");
+    showToast("Convênio adicionado (rascunho local — não sincronizado)", "success");
   };
 
   return (
@@ -211,12 +242,26 @@ export function SettingsPageContent() {
       {activeTab === "clinica" && (
         <Card>
           <CardHeader>
-            <CardTitle>Dados da clínica</CardTitle>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              Dados da clínica
+              <Badge variant="secondary">Sincronizado com a API</Badge>
+            </CardTitle>
             <CardDescription>
-              Informações exibidas no sistema e relatórios
+              Nome, telefone e e-mail são persistidos via PATCH /clinics/me
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
+            {clinicQuery.isLoading && <LoadingState />}
+            {clinicQuery.isError && (
+              <ErrorState
+                message={getErrorMessage(
+                  clinicQuery.error,
+                  "Erro ao carregar dados da clínica.",
+                )}
+              />
+            )}
+            {!clinicQuery.isLoading && !clinicQuery.isError && (
+              <>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="clinic-name">Nome da clínica</Label>
               <Input
@@ -227,15 +272,9 @@ export function SettingsPageContent() {
                 }
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="clinic-cnpj">CNPJ</Label>
-              <Input
-                id="clinic-cnpj"
-                value={clinicForm.cnpj}
-                onChange={(e) =>
-                  setClinicForm((prev) => ({ ...prev, cnpj: e.target.value }))
-                }
-              />
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="clinic-cnpj">CNPJ (somente leitura)</Label>
+              <Input id="clinic-cnpj" value={clinicForm.cnpj} readOnly disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="clinic-phone">Telefone</Label>
@@ -259,7 +298,10 @@ export function SettingsPageContent() {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="clinic-address">Endereço</Label>
+              <Label htmlFor="clinic-address">
+                Endereço{" "}
+                <span className="text-muted-foreground">(rascunho local)</span>
+              </Label>
               <Textarea
                 id="clinic-address"
                 value={clinicForm.address}
@@ -269,8 +311,15 @@ export function SettingsPageContent() {
               />
             </div>
             <div className="sm:col-span-2">
-              <Button onClick={handleSaveClinic}>Salvar alterações</Button>
+              <Button
+                onClick={handleSaveClinic}
+                disabled={updateClinic.isPending}
+              >
+                {updateClinic.isPending ? "Salvando..." : "Salvar alterações"}
+              </Button>
             </div>
+              </>
+            )}
           </CardContent>
         </Card>
       )}
@@ -519,6 +568,8 @@ export function SettingsPageContent() {
       )}
 
       {activeTab === "perfis" && (
+        <div className="space-y-4">
+          <Badge variant="outline">Rascunho local — não sincronizado com o servidor</Badge>
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {profiles.map((profile) => (
             <Card key={profile.id}>
@@ -547,14 +598,18 @@ export function SettingsPageContent() {
             </Card>
           ))}
         </div>
+        </div>
       )}
 
       {activeTab === "convenios" && (
         <Card>
           <CardHeader>
-            <CardTitle>Convênios</CardTitle>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              Convênios
+              <Badge variant="outline">Rascunho local</Badge>
+            </CardTitle>
             <CardDescription>
-              Planos e formas de pagamento aceitos pela clínica
+              Planos aceitos — ainda não persistidos no backend
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

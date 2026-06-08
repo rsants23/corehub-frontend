@@ -110,6 +110,24 @@ export const apiService = {
     create: (data: CreateCancellationPayload) =>
       httpClient.post(API_ENDPOINTS.cancellations, data),
   },
+  clinics: {
+    getMe: () =>
+      httpClient.get<{
+        id: string;
+        tenantId: string;
+        legalName: string;
+        tradeName: string;
+        cnpj: string;
+        email: string;
+        phone: string;
+      }>(API_ENDPOINTS.clinics.me),
+    updateMe: (data: {
+      legalName?: string;
+      tradeName?: string;
+      email?: string;
+      phone?: string;
+    }) => httpClient.patch(API_ENDPOINTS.clinics.me, data),
+  },
   rescheduling: {
     generate: (date: string) =>
       httpClient.post<ApiSimulateResponse>(

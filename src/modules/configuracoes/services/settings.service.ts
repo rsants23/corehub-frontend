@@ -6,7 +6,30 @@ import type {
   LinkTherapistSkillPayload,
 } from "@/types/api";
 
+export interface ClinicProfile {
+  id: string;
+  tenantId: string;
+  legalName: string;
+  tradeName: string;
+  cnpj: string;
+  email: string;
+  phone: string;
+}
+
 export const settingsService = {
+  async getClinic(): Promise<ClinicProfile> {
+    return apiService.clinics.getMe();
+  },
+
+  async updateClinic(data: {
+    legalName?: string;
+    tradeName?: string;
+    email?: string;
+    phone?: string;
+  }): Promise<ClinicProfile> {
+    return apiService.clinics.updateMe(data) as Promise<ClinicProfile>;
+  },
+
   async listTherapyTypes(): Promise<TherapyType[]> {
     const data = await apiService.therapyTypes.list();
     return data.filter((t) => t.active).map(mapTherapyType);

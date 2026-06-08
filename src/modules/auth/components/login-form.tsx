@@ -39,19 +39,19 @@ export function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      cnpj: "00.000.000/0000-00",
-      email: "admin@efata.local",
-      password: "Admin@123456",
+      cnpj: "",
+      email: "",
+      password: "",
     },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
       await login(values.cnpj, values.email, values.password);
-      showToast("Login realizado com sucesso");
+      showToast("Login realizado com sucesso", "success");
       router.push(ROUTES.dashboard);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao fazer login"));
+      showToast(getErrorMessage(err, "Erro ao fazer login"), "error");
     }
   };
 

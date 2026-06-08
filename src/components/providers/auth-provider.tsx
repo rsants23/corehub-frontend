@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { ROUTES } from "@/constants/routes";
+import { setAuthSessionCookie } from "@/lib/auth-cookie";
 import { setUnauthorizedHandler } from "@/services/auth-interceptor";
 import { useAuthStore } from "@/stores/auth-store";
-import { ROUTES } from "@/constants/routes";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isHydrated, restoreSession, logout } = useAuthStore();
+  const pathname = usePathname();
+  const { isHydrated, isAuthenticated, restoreSession, logout } = useAuthStore();
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -18,10 +20,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [logout, router]);
 
   useEffect(() => {
-    if (isHydrated) {
-      void restoreSession();
+    if (!isHydrated) return;
+
+    void restoreSession().then(() => {
+      const { isAuthenticated: authed } = useAuthStore.getState();
+      if (authed) {
+        setAuthSessionCookie();
+        if (pathname === ROUTES.login) {
+          router.replace(ROUTES.dashboard);
+        }
+      }
+    });
+  }, [isHydrated, pathname, restoreSession, router]);
+
+  useEffect(() => {
+    if (isHydrated && isAuthenticated) {
+      setAuthSessionCookie();
     }
-  }, [isHydrated, restoreSession]);
+  }, [isHydrated, isAuthenticated]);
 
   return <>{children}</>;
 }

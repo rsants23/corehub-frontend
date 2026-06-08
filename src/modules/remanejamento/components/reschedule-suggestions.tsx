@@ -37,7 +37,7 @@ export function RescheduleSuggestionsPage() {
       await generate.mutateAsync();
       showToast("Sugestões geradas com sucesso");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao gerar sugestões"));
+      showToast(getErrorMessage(err, "Erro ao gerar sugestões"), "error");
     }
   };
 
@@ -46,7 +46,7 @@ export function RescheduleSuggestionsPage() {
       await accept.mutateAsync(id);
       showToast("Sugestão aprovada com sucesso");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao aprovar sugestão"));
+      showToast(getErrorMessage(err, "Erro ao aprovar sugestão"), "error");
     }
   };
 
@@ -55,7 +55,7 @@ export function RescheduleSuggestionsPage() {
       await reject.mutateAsync(id);
       showToast("Sugestão rejeitada");
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao rejeitar sugestão"));
+      showToast(getErrorMessage(err, "Erro ao rejeitar sugestão"), "error");
     }
   };
 
@@ -67,7 +67,7 @@ export function RescheduleSuggestionsPage() {
       showToast("Remanejamento aplicado com sucesso");
       setSuggestionToApply(null);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao aplicar remanejamento"));
+      showToast(getErrorMessage(err, "Erro ao aplicar remanejamento"), "error");
     }
   };
 

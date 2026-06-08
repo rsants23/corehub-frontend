@@ -2,6 +2,10 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authService } from "@/modules/auth/auth.service";
 import { normalizeCnpj } from "@/modules/auth/schemas/login.schema";
+import {
+  clearAuthSessionCookie,
+  setAuthSessionCookie,
+} from "@/lib/auth-cookie";
 import type { AuthUser } from "@/types/auth";
 
 interface AuthState {
@@ -46,17 +50,20 @@ export const useAuthStore = create<AuthState>()(
             user: me,
             isAuthenticated: true,
           });
+          setAuthSessionCookie();
         } finally {
           set({ isLoading: false });
         }
       },
 
-      logout: () =>
+      logout: () => {
+        clearAuthSessionCookie();
         set({
           user: null,
           token: null,
           isAuthenticated: false,
-        }),
+        });
+      },
 
       updateUser: (data) =>
         set((state) =>
@@ -74,7 +81,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           const me = await authService.getMe();
           set({ user: me, isAuthenticated: true });
+          setAuthSessionCookie();
         } catch {
+          clearAuthSessionCookie();
           set({ user: null, token: null, isAuthenticated: false });
         } finally {
           set({ isLoading: false });

@@ -45,7 +45,7 @@ export function PatientsPageContent() {
       setEditingPatient(null);
       setDialogOpen(false);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao salvar paciente"));
+      showToast(getErrorMessage(err, "Erro ao salvar paciente"), "error");
     }
   };
 
@@ -57,7 +57,7 @@ export function PatientsPageContent() {
       showToast("Paciente desativado com sucesso");
       setPatientToRemove(null);
     } catch (err) {
-      showToast(getErrorMessage(err, "Erro ao desativar paciente"));
+      showToast(getErrorMessage(err, "Erro ao desativar paciente"), "error");
     }
   };
 
