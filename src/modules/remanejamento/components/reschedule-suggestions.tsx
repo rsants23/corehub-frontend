@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Pencil, RefreshCw, X } from "lucide-react";
+import { Check, Pencil, Play, RefreshCw, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,53 +10,64 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ErrorState, LoadingState } from "@/components/shared/query-states";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { ErrorState } from "@/components/shared/query-states";
+import { CardListSkeleton } from "@/components/shared/skeletons";
 import { SuggestionStatusBadge } from "@/components/shared/status-badge";
 import {
   useRescheduleSuggestions,
   useReschedulingMutations,
 } from "@/hooks/use-rescheduling";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { getTodayDate } from "@/utils/date";
 import { useToastStore } from "@/stores/toast-store";
 
 export function RescheduleSuggestionsPage() {
   const [date, setDate] = useState(getTodayDate());
+  const [suggestionToApply, setSuggestionToApply] = useState<string | null>(
+    null,
+  );
   const showToast = useToastStore((state) => state.showToast);
   const { data: suggestions, isLoading, isError, error } =
     useRescheduleSuggestions(date);
-  const { generate, accept, reject } = useReschedulingMutations(date);
+  const { generate, accept, reject, apply } = useReschedulingMutations(date);
 
   const handleGenerate = async () => {
     try {
       await generate.mutateAsync();
-      showToast("Sugestões geradas via API");
+      showToast("Sugestões geradas com sucesso");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao gerar sugestões",
-      );
+      showToast(getErrorMessage(err, "Erro ao gerar sugestões"));
     }
   };
 
   const handleAccept = async (id: string) => {
     try {
       await accept.mutateAsync(id);
-      showToast("Sugestão aprovada na API");
+      showToast("Sugestão aprovada com sucesso");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao aprovar sugestão",
-      );
+      showToast(getErrorMessage(err, "Erro ao aprovar sugestão"));
     }
   };
 
   const handleReject = async (id: string) => {
     try {
       await reject.mutateAsync(id);
-      showToast("Sugestão rejeitada na API");
+      showToast("Sugestão rejeitada");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao rejeitar sugestão",
-      );
+      showToast(getErrorMessage(err, "Erro ao rejeitar sugestão"));
+    }
+  };
+
+  const handleConfirmApply = async () => {
+    if (!suggestionToApply) return;
+
+    try {
+      await apply.mutateAsync(suggestionToApply);
+      showToast("Remanejamento aplicado com sucesso");
+      setSuggestionToApply(null);
+    } catch (err) {
+      showToast(getErrorMessage(err, "Erro ao aplicar remanejamento"));
     }
   };
 
@@ -80,24 +91,23 @@ export function RescheduleSuggestionsPage() {
         </Button>
       </div>
 
-      {isLoading && <LoadingState />}
+      {isLoading && <CardListSkeleton count={3} />}
       {isError && (
         <ErrorState
-          message={
-            error instanceof HttpError
-              ? error.message
-              : "Erro ao carregar sugestões."
-          }
+          message={getErrorMessage(error, "Erro ao carregar sugestões.")}
         />
       )}
 
       {suggestions && (
         <div className="grid gap-4">
           {suggestions.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma sugestão para esta data. Gere a agenda do dia, registre
-              faltas e clique em &quot;Gerar sugestões&quot;.
-            </p>
+            <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
+              <p className="text-sm font-medium">Nenhuma sugestão para esta data</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Gere a agenda do dia, registre faltas e clique em &quot;Gerar
+                sugestões&quot;.
+              </p>
+            </div>
           )}
           {suggestions.map((suggestion) => (
             <Card key={suggestion.id}>
@@ -156,7 +166,9 @@ export function RescheduleSuggestionsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        showToast("Alteração manual — use PATCH na API")
+                        showToast(
+                          "Alteração manual ainda não disponível na API — TODO",
+                        )
                       }
                     >
                       <Pencil className="h-4 w-4" />
@@ -164,11 +176,32 @@ export function RescheduleSuggestionsPage() {
                     </Button>
                   </div>
                 )}
+
+                {suggestion.status === "ACCEPTED" && (
+                  <Button
+                    size="sm"
+                    onClick={() => setSuggestionToApply(suggestion.id)}
+                  >
+                    <Play className="h-4 w-4" />
+                    Aplicar remanejamento
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={Boolean(suggestionToApply)}
+        onOpenChange={(open) => !open && setSuggestionToApply(null)}
+        title="Aplicar remanejamento"
+        description="Deseja aplicar esta sugestão aprovada? Um novo atendimento será criado na agenda."
+        confirmLabel="Aplicar"
+        variant="default"
+        isLoading={apply.isPending}
+        onConfirm={handleConfirmApply}
+      />
     </div>
   );
 }

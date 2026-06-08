@@ -1,10 +1,11 @@
 "use client";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { ErrorState, LoadingState } from "@/components/shared/query-states";
+import { ErrorState } from "@/components/shared/query-states";
+import { StatCardsSkeleton } from "@/components/shared/skeletons";
 import { ReportsDashboard } from "@/modules/relatorios/components/reports-dashboard";
 import { useReports } from "@/hooks/use-reports";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { getTodayDate } from "@/utils/date";
 
 export function ReportsPageContent() {
@@ -16,14 +17,10 @@ export function ReportsPageContent() {
       title="Relatórios"
       description="Indicadores operacionais do dia"
     >
-      {isLoading && <LoadingState />}
+      {isLoading && <StatCardsSkeleton count={4} />}
       {isError && (
         <ErrorState
-          message={
-            error instanceof HttpError
-              ? error.message
-              : "Erro ao calcular relatórios."
-          }
+          message={getErrorMessage(error, "Erro ao calcular relatórios.")}
         />
       )}
       {metrics && <ReportsDashboard metrics={metrics} />}

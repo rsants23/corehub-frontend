@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Bell, LogOut, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ROUTES } from "@/constants/routes";
+import { ROLE_LABELS, ROUTES } from "@/constants/routes";
 import { useAuthStore } from "@/stores/auth-store";
 
 interface HeaderProps {
@@ -48,7 +48,8 @@ export function Header({ title, description }: HeaderProps) {
           <div className="hidden text-right sm:block">
             <p className="text-sm font-medium">{user?.name ?? "Usuário"}</p>
             <p className="text-xs text-muted-foreground">
-              {user?.email ?? "coordenacao@clinica.com"}
+              {user?.role ? ROLE_LABELS[user.role] : ""}
+              {user?.clinic?.tradeName ? ` · ${user.clinic.tradeName}` : ""}
             </p>
           </div>
           <Button

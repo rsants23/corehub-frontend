@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,23 +26,33 @@ import {
   loginSchema,
   type LoginFormValues,
 } from "@/modules/auth/schemas/login.schema";
+import { getErrorMessage } from "@/services/api-error";
 import { useAuthStore } from "@/stores/auth-store";
+import { useToastStore } from "@/stores/toast-store";
 
 export function LoginForm() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const showToast = useToastStore((state) => state.showToast);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "coordenacao@clinica.com",
-      password: "123456",
+      cnpj: "00.000.000/0000-00",
+      email: "admin@efata.local",
+      password: "Admin@123456",
     },
   });
 
-  const onSubmit = (values: LoginFormValues) => {
-    login(values.email, values.password);
-    router.push(ROUTES.dashboard);
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      await login(values.cnpj, values.email, values.password);
+      showToast("Login realizado com sucesso");
+      router.push(ROUTES.dashboard);
+    } catch (err) {
+      showToast(getErrorMessage(err, "Erro ao fazer login"));
+    }
   };
 
   return (
@@ -55,13 +65,26 @@ export function LoginForm() {
           <div>
             <CardTitle className="text-2xl">Efata CoreHub</CardTitle>
             <CardDescription>
-              Sistema de remanejamento automático de agenda
+              Acesse com o CNPJ da clínica, e-mail e senha
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="cnpj"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CNPJ da clínica</FormLabel>
+                    <FormControl>
+                      <Input placeholder="00.000.000/0000-00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -92,8 +115,8 @@ export function LoginForm() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Entrar
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
           </Form>

@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { ErrorState, LoadingState } from "@/components/shared/query-states";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { ErrorState } from "@/components/shared/query-states";
+import { CardListSkeleton } from "@/components/shared/skeletons";
 import { PageHeader } from "@/components/shared/page-header";
 import { AppointmentsList } from "@/modules/agendas/components/appointments-list";
 import { FixedScheduleFormDialog } from "@/modules/agendas/components/fixed-schedule-form-dialog";
@@ -13,7 +15,7 @@ import { useTherapists } from "@/hooks/use-therapists";
 import { useSettings } from "@/hooks/use-settings";
 import { getTodayDate } from "@/utils/date";
 import { useToastStore } from "@/stores/toast-store";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { Button } from "@/components/ui/button";
 import type { Appointment } from "@/types";
 
@@ -30,6 +32,9 @@ export function SchedulesPageContent() {
   const [editingSchedule, setEditingSchedule] = useState<Appointment | null>(
     null,
   );
+  const [scheduleToRemove, setScheduleToRemove] = useState<Appointment | null>(
+    null,
+  );
 
   const activePatients = (patients ?? []).filter((p) => p.status === "active");
   const activeTherapists = (therapists ?? []).filter(
@@ -39,11 +44,9 @@ export function SchedulesPageContent() {
   const handleGenerateDaily = async () => {
     try {
       await generateDaily.mutateAsync(today);
-      showToast("Agenda diária gerada");
+      showToast("Agenda diária gerada com sucesso");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao gerar agenda diária",
-      );
+      showToast(getErrorMessage(err, "Erro ao gerar agenda diária"));
     }
   };
 
@@ -64,28 +67,27 @@ export function SchedulesPageContent() {
           id: editingSchedule.id,
           payload,
         });
-        showToast("Horário fixo atualizado");
+        showToast("Horário fixo atualizado com sucesso");
       } else {
         await createFixed.mutateAsync(payload);
-        showToast("Horário fixo cadastrado");
+        showToast("Horário fixo cadastrado com sucesso");
       }
       setEditingSchedule(null);
       setDialogOpen(false);
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao salvar horário fixo",
-      );
+      showToast(getErrorMessage(err, "Erro ao salvar horário fixo"));
     }
   };
 
-  const handleRemove = async (schedule: Appointment) => {
+  const handleConfirmRemove = async () => {
+    if (!scheduleToRemove) return;
+
     try {
-      await removeFixed.mutateAsync(schedule.id);
-      showToast("Horário fixo removido");
+      await removeFixed.mutateAsync(scheduleToRemove.id);
+      showToast("Horário fixo removido com sucesso");
+      setScheduleToRemove(null);
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao remover horário fixo",
-      );
+      showToast(getErrorMessage(err, "Erro ao remover horário fixo"));
     }
   };
 
@@ -116,23 +118,25 @@ export function SchedulesPageContent() {
           </Button>
         </div>
       </PageHeader>
-      {isLoading && <LoadingState />}
+      {isLoading && <CardListSkeleton count={4} />}
       {isError && (
         <ErrorState
-          message={
-            error instanceof HttpError
-              ? error.message
-              : "Erro ao carregar agendas fixas."
-          }
+          message={getErrorMessage(
+            error,
+            "Erro ao carregar agendas fixas.",
+          )}
         />
       )}
       {schedules && (
         <>
           {schedules.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum horário fixo cadastrado. Clique em &quot;Novo horário
-              fixo&quot; para começar.
-            </p>
+            <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
+              <p className="text-sm font-medium">Nenhum horário fixo cadastrado</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Clique em &quot;Novo horário fixo&quot; para começar a montar a
+                grade semanal.
+              </p>
+            </div>
           ) : (
             <AppointmentsList
               appointments={schedules}
@@ -140,7 +144,7 @@ export function SchedulesPageContent() {
                 setEditingSchedule(schedule);
                 setDialogOpen(true);
               }}
-              onRemove={handleRemove}
+              onRemove={(schedule) => setScheduleToRemove(schedule)}
             />
           )}
         </>
@@ -154,6 +158,19 @@ export function SchedulesPageContent() {
         therapyTypes={therapyTypes.data ?? []}
         onSubmit={handleSave}
         isSubmitting={isSaving}
+      />
+      <ConfirmDialog
+        open={Boolean(scheduleToRemove)}
+        onOpenChange={(open) => !open && setScheduleToRemove(null)}
+        title="Remover horário fixo"
+        description={
+          scheduleToRemove
+            ? `Deseja remover o horário de ${scheduleToRemove.patientName} com ${scheduleToRemove.therapistName}?`
+            : ""
+        }
+        confirmLabel="Remover"
+        isLoading={removeFixed.isPending}
+        onConfirm={handleConfirmRemove}
       />
     </AppShell>
   );

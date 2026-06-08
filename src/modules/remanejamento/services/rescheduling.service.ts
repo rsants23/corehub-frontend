@@ -8,15 +8,19 @@ export const reschedulingService = {
     return data.map(mapRescheduleSuggestion);
   },
   async generateSuggestions(date: string): Promise<RescheduleSuggestion[]> {
-    const result = await apiService.rescheduling.simulate(date);
+    const result = await apiService.rescheduling.generate(date);
     return result.suggestions.map(mapRescheduleSuggestion);
   },
   async accept(id: string, date: string): Promise<RescheduleSuggestion[]> {
-    await apiService.rescheduling.accept(id);
+    await apiService.rescheduling.approve(id);
     return this.listSuggestions(date);
   },
   async reject(id: string, date: string): Promise<RescheduleSuggestion[]> {
     await apiService.rescheduling.reject(id);
+    return this.listSuggestions(date);
+  },
+  async apply(id: string, date: string): Promise<RescheduleSuggestion[]> {
+    await apiService.rescheduling.apply(id);
     return this.listSuggestions(date);
   },
 };

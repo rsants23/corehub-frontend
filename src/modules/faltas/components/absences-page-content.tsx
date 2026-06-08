@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { ErrorState, LoadingState } from "@/components/shared/query-states";
+import { ErrorState } from "@/components/shared/query-states";
+import { CardListSkeleton } from "@/components/shared/skeletons";
 import { AbsenceForm } from "@/modules/faltas/components/absence-form";
 import { AbsencesList } from "@/modules/faltas/components/absences-list";
 import type { AbsenceFormValues } from "@/modules/faltas/schemas/absence.schema";
@@ -13,7 +14,7 @@ import {
 } from "@/hooks/use-absences";
 import { useTherapists } from "@/hooks/use-therapists";
 import { useScheduleMutations } from "@/hooks/use-schedules";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { getTodayDate } from "@/utils/date";
 import { useToastStore } from "@/stores/toast-store";
 import { Button } from "@/components/ui/button";
@@ -49,26 +50,18 @@ export function AbsencesPageContent() {
           reason: values.reason,
         });
       }
-      showToast("Falta registrada na API");
+      showToast("Falta registrada com sucesso");
     } catch (err) {
-      showToast(
-        err instanceof HttpError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "Erro ao registrar falta",
-      );
+      showToast(getErrorMessage(err, "Erro ao registrar falta"));
     }
   };
 
   const handleGenerateDaily = async () => {
     try {
       await generateDaily.mutateAsync(date);
-      showToast("Agenda do dia gerada na API");
+      showToast("Agenda do dia gerada com sucesso");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao gerar agenda do dia",
-      );
+      showToast(getErrorMessage(err, "Erro ao gerar agenda do dia"));
     }
   };
 
@@ -107,17 +100,23 @@ export function AbsencesPageContent() {
         />
         <div>
           <h3 className="mb-4 text-lg font-semibold">Faltas registradas</h3>
-          {isLoading && <LoadingState />}
+          {isLoading && <CardListSkeleton count={3} />}
           {isError && (
             <ErrorState
-              message={
-                error instanceof HttpError
-                  ? error.message
-                  : "Erro ao carregar faltas."
-              }
+              message={getErrorMessage(error, "Erro ao carregar faltas.")}
             />
           )}
-          {absences && <AbsencesList absences={absences} />}
+          {absences && (
+            <>
+              {absences.length === 0 ? (
+                <div className="rounded-xl border border-dashed bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+                  Nenhuma falta registrada para esta data.
+                </div>
+              ) : (
+                <AbsencesList absences={absences} />
+              )}
+            </>
+          )}
         </div>
       </div>
     </AppShell>

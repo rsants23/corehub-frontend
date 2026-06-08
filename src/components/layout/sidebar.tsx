@@ -6,14 +6,16 @@ import {
   BarChart3,
   Calendar,
   LayoutDashboard,
+  ScrollText,
   Settings,
   Shuffle,
   Stethoscope,
+  UserCog,
   UserX,
   Users,
 } from "lucide-react";
-import { NAV_ITEMS } from "@/constants/routes";
-import { useClinicSettingsStore } from "@/stores/clinic-settings-store";
+import { getNavItemsForRole } from "@/constants/routes";
+import { useAuthStore } from "@/stores/auth-store";
 import { cn } from "@/utils/cn";
 
 const iconMap = {
@@ -25,11 +27,19 @@ const iconMap = {
   Shuffle,
   BarChart3,
   Settings,
+  UserCog,
+  ScrollText,
 } as const;
 
 export function Sidebar() {
   const pathname = usePathname();
-  const clinicName = useClinicSettingsStore((state) => state.clinic.name);
+  const user = useAuthStore((state) => state.user);
+  const navItems = getNavItemsForRole(user?.role);
+
+  const clinicLabel =
+    user?.role === "THERAPIST" && user?.clinic?.tradeName
+      ? `${user.clinic.tradeName} — Minha Agenda`
+      : user?.clinic?.tradeName ?? "Efata CoreHub";
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
@@ -39,14 +49,12 @@ export function Sidebar() {
         </div>
         <div>
           <p className="text-sm font-semibold">Efata CoreHub</p>
-          <p className="text-xs text-sidebar-foreground/70">
-            Gestão de agenda clínica
-          </p>
+          <p className="text-xs text-sidebar-foreground/70">SaaS clínico</p>
         </div>
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
-        {NAV_ITEMS.map((item) => {
+        {navItems.map((item) => {
           const Icon = iconMap[item.icon as keyof typeof iconMap];
           const isActive =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -63,15 +71,17 @@ export function Sidebar() {
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              {user?.role === "THERAPIST" && item.href.includes("agendas")
+                ? "Minha Agenda"
+                : item.label}
             </Link>
           );
         })}
       </nav>
 
       <div className="border-t border-sidebar-border p-4">
-        <p className="truncate text-xs text-sidebar-foreground/60">
-          {clinicName}
+        <p className="truncate text-xs font-medium text-sidebar-foreground/80">
+          {clinicLabel}
         </p>
       </div>
     </aside>

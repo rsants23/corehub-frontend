@@ -111,6 +111,11 @@ export const apiService = {
       httpClient.post(API_ENDPOINTS.cancellations, data),
   },
   rescheduling: {
+    generate: (date: string) =>
+      httpClient.post<ApiSimulateResponse>(
+        API_ENDPOINTS.rescheduling.generate,
+        { date },
+      ),
     simulate: (date: string) =>
       httpClient.post<ApiSimulateResponse>(
         API_ENDPOINTS.rescheduling.simulate,
@@ -128,8 +133,13 @@ export const apiService = {
         API_ENDPOINTS.rescheduling.accept(id),
         {},
       ),
+    approve: (id: string) =>
+      httpClient.post<ApiRescheduleSuggestion>(
+        API_ENDPOINTS.rescheduling.approve(id),
+        {},
+      ),
     reject: (id: string) =>
-      httpClient.patch<ApiRescheduleSuggestion>(
+      httpClient.post<ApiRescheduleSuggestion>(
         API_ENDPOINTS.rescheduling.reject(id),
         {},
       ),

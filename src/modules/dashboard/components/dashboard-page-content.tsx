@@ -9,11 +9,12 @@ import {
   Users,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
-import { ErrorState, LoadingState } from "@/components/shared/query-states";
+import { ErrorState } from "@/components/shared/query-states";
+import { StatCardsSkeleton } from "@/components/shared/skeletons";
 import { StatCard } from "@/components/shared/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDashboard } from "@/hooks/use-dashboard";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { getTodayDate } from "@/utils/date";
 import { formatPercent } from "@/utils/format";
 
@@ -26,14 +27,15 @@ export function DashboardPageContent() {
       title="Dashboard"
       description="Visão geral da operação clínica de hoje"
     >
-      {isLoading && <LoadingState message="Carregando indicadores da API..." />}
+      {isLoading && (
+        <StatCardsSkeleton count={6} />
+      )}
       {isError && (
         <ErrorState
-          message={
-            error instanceof HttpError
-              ? error.message
-              : "Erro ao carregar dashboard. Verifique se a API está rodando."
-          }
+          message={getErrorMessage(
+            error,
+            "Erro ao carregar dashboard. Verifique se a API está rodando.",
+          )}
         />
       )}
       {stats && (

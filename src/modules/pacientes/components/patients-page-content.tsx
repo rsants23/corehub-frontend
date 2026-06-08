@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-import { ErrorState, LoadingState } from "@/components/shared/query-states";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { ErrorState } from "@/components/shared/query-states";
+import { TableSkeleton } from "@/components/shared/skeletons";
 import { PageHeader } from "@/components/shared/page-header";
 import { PatientFormDialog } from "@/modules/pacientes/components/patient-form-dialog";
 import { PatientsTable } from "@/modules/pacientes/components/patients-table";
 import type { PatientFormValues } from "@/modules/pacientes/schemas/patient.schema";
 import { usePatientMutations, usePatients } from "@/hooks/use-patients";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { useToastStore } from "@/stores/toast-store";
 import type { Patient } from "@/types";
 
@@ -18,6 +20,7 @@ export function PatientsPageContent() {
   const { create, update, remove } = usePatientMutations();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [patientToRemove, setPatientToRemove] = useState<Patient | null>(null);
 
   const handleSave = async (values: PatientFormValues) => {
     try {
@@ -30,32 +33,31 @@ export function PatientsPageContent() {
 
       if (editingPatient) {
         await update.mutateAsync({ id: editingPatient.id, payload });
-        showToast("Paciente atualizado na API");
+        showToast("Paciente atualizado com sucesso");
       } else {
         await create.mutateAsync({
           name: values.name,
           birthDate: values.birthDate || undefined,
           notes: values.notes || undefined,
         });
-        showToast("Paciente cadastrado na API");
+        showToast("Paciente cadastrado com sucesso");
       }
       setEditingPatient(null);
       setDialogOpen(false);
     } catch (err) {
-      const message =
-        err instanceof HttpError ? err.message : "Erro ao salvar paciente";
-      showToast(message);
+      showToast(getErrorMessage(err, "Erro ao salvar paciente"));
     }
   };
 
-  const handleRemove = async (patient: Patient) => {
+  const handleConfirmRemove = async () => {
+    if (!patientToRemove) return;
+
     try {
-      await remove.mutateAsync(patient.id);
-      showToast("Paciente desativado na API");
+      await remove.mutateAsync(patientToRemove.id);
+      showToast("Paciente desativado com sucesso");
+      setPatientToRemove(null);
     } catch (err) {
-      const message =
-        err instanceof HttpError ? err.message : "Erro ao desativar paciente";
-      showToast(message);
+      showToast(getErrorMessage(err, "Erro ao desativar paciente"));
     }
   };
 
@@ -71,14 +73,13 @@ export function PatientsPageContent() {
           setDialogOpen(true);
         }}
       />
-      {isLoading && <LoadingState />}
+      {isLoading && <TableSkeleton rows={6} columns={5} />}
       {isError && (
         <ErrorState
-          message={
-            error instanceof HttpError
-              ? error.message
-              : "Não foi possível carregar pacientes da API."
-          }
+          message={getErrorMessage(
+            error,
+            "Não foi possível carregar pacientes da API.",
+          )}
         />
       )}
       {patients && (
@@ -89,7 +90,7 @@ export function PatientsPageContent() {
             setEditingPatient(p);
             setDialogOpen(true);
           }}
-          onRemove={handleRemove}
+          onRemove={(p) => setPatientToRemove(p)}
         />
       )}
       <PatientFormDialog
@@ -98,6 +99,19 @@ export function PatientsPageContent() {
         patient={editingPatient}
         onSubmit={handleSave}
         isSubmitting={create.isPending || update.isPending}
+      />
+      <ConfirmDialog
+        open={Boolean(patientToRemove)}
+        onOpenChange={(open) => !open && setPatientToRemove(null)}
+        title="Desativar paciente"
+        description={
+          patientToRemove
+            ? `Deseja desativar o paciente "${patientToRemove.name}"? O registro permanecerá no sistema, mas ficará inativo.`
+            : ""
+        }
+        confirmLabel="Desativar"
+        isLoading={remove.isPending}
+        onConfirm={handleConfirmRemove}
       />
     </AppShell>
   );

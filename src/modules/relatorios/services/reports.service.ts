@@ -1,116 +1,67 @@
-import { apiService } from "@/services/api";
-import { mapDailyAppointment, mapTherapist } from "@/utils/mappers";
+import { API_ENDPOINTS } from "@/constants/api";
+import { httpClient } from "@/services/http-client";
 import type { DashboardStats, ReportMetrics } from "@/types";
+
+interface ApiDashboardResponse {
+  date: string;
+  patientsToday: number;
+  therapistsPresent: number;
+  absencesRegistered: number;
+  freeSlots: number;
+  suggestedReschedules: number;
+  occupancyRate: number;
+  scheduledAppointments?: number;
+}
+
+interface ApiOccupancyResponse {
+  date: string;
+  therapistOccupancy: { name: string; rate: number }[];
+  overallRate: number;
+  absenceImpactRate: number;
+}
 
 export const dashboardService = {
   async getStats(date: string): Promise<DashboardStats> {
-    const [therapists, absences, cancellations, suggestions] =
-      await Promise.all([
-        apiService.therapists.list(),
-        apiService.absences.list(date).catch(() => []),
-        apiService.cancellations.list(date).catch(() => []),
-        apiService.rescheduling
-          .listSuggestions(date, "PENDING")
-          .catch(() => []),
-      ]);
-
-    let patientsToday = 0;
-    let freeSlots = 0;
-    let occupancyRate = 0;
-
-    try {
-      const daily = await apiService.schedules.getDaily(date);
-      const scheduled = daily.appointments.filter(
-        (a) => a.status === "SCHEDULED" || a.status === "RESCHEDULED",
-      );
-      patientsToday = new Set(scheduled.map((a) => a.patientId)).size;
-
-      if (scheduled.length > 0 && therapists.length > 0) {
-        occupancyRate = Math.min(
-          100,
-          (scheduled.length / (therapists.length * 8)) * 100,
-        );
-      }
-    } catch {
-      patientsToday = 0;
-    }
-
-    try {
-      const slots = await apiService.schedules.getFreeSlots(date);
-      freeSlots = slots.length;
-    } catch {
-      freeSlots = 0;
-    }
-
-    const absentTherapistIds = new Set(absences.map((a) => a.therapistId));
-
+    const data = await httpClient.get<ApiDashboardResponse>(
+      `${API_ENDPOINTS.reports.dashboard}?date=${date}`,
+    );
     return {
-      patientsToday,
-      therapistsPresent: therapists.length - absentTherapistIds.size,
-      absencesRegistered: absences.length + cancellations.length,
-      freeSlots,
-      suggestedReschedules: suggestions.length,
-      occupancyRate,
+      patientsToday: data.patientsToday,
+      therapistsPresent: data.therapistsPresent,
+      absencesRegistered: data.absencesRegistered,
+      freeSlots: data.freeSlots,
+      suggestedReschedules: data.suggestedReschedules,
+      occupancyRate: data.occupancyRate,
     };
   },
 };
 
 export const reportsService = {
   async getMetrics(date: string): Promise<ReportMetrics> {
-    const [therapists, absences, cancellations, suggestions] =
-      await Promise.all([
-        apiService.therapists.list(),
-        apiService.absences.list(date).catch(() => []),
-        apiService.cancellations.list(date).catch(() => []),
-        apiService.rescheduling.listSuggestions(date).catch(() => []),
-      ]);
+    const occupancy = await httpClient.get<ApiOccupancyResponse>(
+      `${API_ENDPOINTS.reports.occupancy}?date=${date}`,
+    );
 
-    let dailyAppointments: ReturnType<typeof mapDailyAppointment>[] = [];
-    try {
-      const daily = await apiService.schedules.getDaily(date);
-      dailyAppointments = daily.appointments.map(mapDailyAppointment);
-    } catch {
-      dailyAppointments = [];
-    }
+    await httpClient.get<{ total: number }>(
+      `${API_ENDPOINTS.reports.absences}?date=${date}`,
+    );
 
-    const totalAppointments = dailyAppointments.length || 1;
-    const absenceRate =
-      ((absences.length + cancellations.length) / totalAppointments) * 100;
-
-    let idleHours = 0;
-    try {
-      const slots = await apiService.schedules.getFreeSlots(date);
-      idleHours = Math.round(
-        slots.reduce((acc, s) => acc + s.durationMinutes, 0) / 60,
-      );
-    } catch {
-      idleHours = 0;
-    }
+    const suggestions = await httpClient.get<{ status: string }[]>(
+      `${API_ENDPOINTS.rescheduling.suggestions}?date=${date}`,
+    ).catch(() => [] as { status: string }[]);
 
     const recoveredAppointments = suggestions.filter(
-      (s) => s.status === "APPLIED" || s.status === "ACCEPTED",
+      (s) => s.status === "APPROVED" || s.status === "ACCEPTED" || s.status === "APPLIED",
     ).length;
 
-    const therapistOccupancy = therapists.map((t) => {
-      const mapped = mapTherapist(t);
-      const therapistAppts = dailyAppointments.filter(
-        (a) => a.therapistName === mapped.name,
-      );
-      const rate =
-        mapped.weeklyHours > 0
-          ? Math.min(100, (therapistAppts.length / 8) * 100)
-          : 0;
-      return {
-        name: mapped.name.split(" ")[1] ?? mapped.name,
-        rate: Math.round(rate),
-      };
-    });
-
     return {
-      absenceRate,
-      idleHours,
+      absenceRate: occupancy.absenceImpactRate,
+      idleHours: 0,
       recoveredAppointments,
-      therapistOccupancy,
+      therapistOccupancy: occupancy.therapistOccupancy.map((t) => ({
+        name: t.name.split(" ")[1] ?? t.name,
+        rate: t.rate,
+      })),
     };
   },
 };

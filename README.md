@@ -1,57 +1,164 @@
 # Efata CoreHub — Frontend
 
-Frontend integrado com a **CoreHub API** (`http://localhost:3100/api`).
+Frontend Next.js integrado à **CoreHub API** para gestão de agenda, faltas e remanejamento automático em clínicas terapêuticas.
 
-## Como rodar
+## Pré-requisitos
+
+- Node.js 18+
+- npm 9+
+- PostgreSQL (via backend)
+- CoreHub API em execução
+
+## Instalação
 
 ```bash
-# 1. API (porta 3100)
-cd corehub-api
-npm run start:dev
-
-# 2. Frontend (porta 80)
 cd corehub-frontend
 npm install
-npm run dev
+cp .env.example .env.local
 ```
 
-Acesse [http://localhost](http://localhost).
+## Variáveis de ambiente
 
-## Configuração
+Crie `.env.local` na raiz do frontend:
 
-`.env`:
-
-```
-PORT=80
+```env
 NEXT_PUBLIC_API_URL=http://localhost:3100/api
 ```
 
-## Integração com API
+| Variável | Descrição | Padrão |
+|----------|-----------|--------|
+| `NEXT_PUBLIC_API_URL` | URL base da API (inclui `/api`) | `http://localhost:3100/api` |
+| `PORT` | Porta do Next.js (opcional) | `3000` |
 
-Todas as telas consomem a API via TanStack Query:
+## Como rodar
 
-| Tela | Endpoints |
-|------|-----------|
-| Dashboard | `/therapists`, `/schedules/daily`, `/absences`, `/cancellations`, `/rescheduling/suggestions` |
-| Pacientes | `GET/POST/PATCH/DELETE /patients` |
-| Terapeutas | `GET/POST/PATCH/DELETE /therapists` |
-| Agendas | `/schedules/fixed/day/*`, `/schedules/daily/generate` |
-| Faltas | `/absences`, `/cancellations` |
-| Remanejamento | `/rescheduling/simulate`, `/rescheduling/suggestions` |
-| Relatórios | Métricas calculadas a partir dos endpoints acima |
-| Configurações | `/therapy-types`, contadores de pacientes/terapeutas |
+### Backend
 
-## Fluxo operacional recomendado
+```bash
+cd corehub-api
+npm install
+npm run db:setup    # migrations + seed (primeira vez)
+npm run start:dev   # http://localhost:3100 — Swagger em /docs
+```
 
-1. `npm run db:setup` no backend (seed)
-2. **Agendas** → Gerar agenda diária
-3. **Faltas** → Registrar ausências/cancelamentos
-4. **Remanejamento** → Gerar sugestões → Aprovar/Rejeitar
+### Frontend
+
+```bash
+cd corehub-frontend
+npm run dev         # http://localhost:3000
+```
+
+### Produção
+
+```bash
+npm run build
+npm run start
+```
+
+## Login
+
+Autenticação via **CNPJ + e-mail + senha** → JWT armazenado em `localStorage`.
+
+### Credenciais de desenvolvimento
+
+| Campo | Valor |
+|-------|-------|
+| CNPJ | `00000000000000` |
+| E-mail | `admin@efata.local` |
+| Senha | `Admin@123456` |
+
+O CNPJ é normalizado para 14 dígitos antes do envio. Após login, o token é enviado automaticamente como `Authorization: Bearer` em todas as requisições. Em 401, a sessão é encerrada e o usuário redirecionado para `/login`.
+
+## Papéis (RBAC)
+
+| Papel | Acesso no menu |
+|-------|------------------|
+| **ADMIN** | Todos os módulos |
+| **COORDINATOR** | Dashboard, pacientes, terapeutas, agendas, faltas, remanejamento, relatórios, auditoria |
+| **RECEPTION** | Dashboard, pacientes, agendas, faltas |
+| **THERAPIST** | Dashboard, agendas (Minha Agenda) |
+
+Menus filtrados por `getNavItemsForRole()` em `src/constants/routes.ts`. `RouteGuard` ativo em `/dashboard`, `/usuarios` e `/auditoria`.
+
+Detalhes completos: [../docs/rbac-matrix.md](../docs/rbac-matrix.md)
+
+## Estrutura de pastas
+
+```
+src/
+├── app/                    # Rotas Next.js (App Router)
+├── components/
+│   ├── auth/               # RouteGuard
+│   ├── layout/             # AppShell, Sidebar, Header
+│   └── ui/                 # shadcn/ui
+├── constants/
+│   ├── api.ts              # Endpoints
+│   └── routes.ts           # Rotas e RBAC de navegação
+├── modules/
+│   ├── auth/               # Login JWT (CNPJ)
+│   ├── pacientes/
+│   ├── terapeutas/
+│   ├── agendas/
+│   ├── faltas/
+│   ├── remanejamento/
+│   ├── relatorios/
+│   ├── usuarios/
+│   ├── auditoria/
+│   └── configuracoes/
+├── services/
+│   ├── http-client.ts      # Fetch + Bearer JWT
+│   └── api.ts
+└── stores/                 # Zustand (auth, toast, settings)
+```
+
+## Status da integração
+
+| Módulo | Status | Endpoints principais |
+|--------|--------|----------------------|
+| Autenticação | ✅ Integrado | `POST /auth/login`, `GET /auth/me` |
+| Dashboard | ✅ Integrado | `GET /reports/dashboard` |
+| Pacientes | ✅ Integrado | `GET/POST/PATCH/DELETE /patients` |
+| Terapeutas | ✅ Integrado | `GET/POST/PATCH/DELETE /therapists` |
+| Agendas | ✅ Integrado | `/schedules/fixed/*`, `/schedules/daily/*` |
+| Faltas | ✅ Integrado | `/absences`, `/cancellations` |
+| Remanejamento | ✅ Integrado | `/rescheduling/generate`, `/rescheduling/suggestions/*` |
+| Relatórios | ✅ Integrado | `/reports/occupancy`, `/reports/absences` |
+| Usuários | ⚠️ Parcial | `GET /users` (sem CRUD na UI) |
+| Configurações | ⚠️ Parcial | `/therapy-types` (API) + dados locais (Zustand) |
+| Auditoria | ✅ Integrado | `GET /audit-logs` |
+| Consentimentos | ❌ Pendente | `/consents` definido, sem UI |
+
+Mapa completo: [../docs/api-integration-map.md](../docs/api-integration-map.md)
+
+### Fluxo operacional
+
+1. Login com CNPJ da clínica
+2. Cadastre pacientes, terapeutas e horários fixos
+3. **Agendas** → Gerar agenda diária
+4. **Faltas** → Registrar ausências/cancelamentos
+5. **Remanejamento** → Gerar sugestões → Aprovar → Aplicar
+
+## Camada de API
+
+- **http-client.ts** — fetch centralizado, Bearer JWT, logout em 401
+- **api-error.ts** — mensagens amigáveis para erros HTTP
+- **TanStack Query** — cache, loading, invalidação após mutations
+- **Zustand** — auth (`corehub-auth`), toast e configurações locais
+
+## Documentação relacionada
+
+| Documento | Conteúdo |
+|-----------|----------|
+| [../docs/multi-tenant-architecture.md](../docs/multi-tenant-architecture.md) | Arquitetura SaaS |
+| [../docs/api-integration-map.md](../docs/api-integration-map.md) | Mapa frontend ↔ API |
+| [../docs/rbac-matrix.md](../docs/rbac-matrix.md) | Permissões por papel |
+| [../docs/business-rules.md](../docs/business-rules.md) | Regras de negócio |
 
 ## Scripts
 
 | Comando | Descrição |
 |---------|-----------|
-| `npm run dev` | Desenvolvimento (porta 80) |
+| `npm run dev` | Desenvolvimento com Turbopack |
 | `npm run build` | Build de produção |
-| `npm run start` | Servidor de produção (porta 80) |
+| `npm run start` | Servidor de produção |
+| `npm run lint` | ESLint |

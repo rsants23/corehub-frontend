@@ -45,7 +45,7 @@ import {
   useTherapistSkills,
 } from "@/hooks/use-settings";
 import { useTherapists } from "@/hooks/use-therapists";
-import { HttpError } from "@/services/http-client";
+import { getErrorMessage } from "@/services/api-error";
 import { useAuthStore } from "@/stores/auth-store";
 import { useClinicSettingsStore } from "@/stores/clinic-settings-store";
 import { useToastStore } from "@/stores/toast-store";
@@ -137,9 +137,7 @@ export function SettingsPageContent() {
       setTherapyForm({ name: "", description: "", durationMinutes: "50" });
       showToast("Tipo de terapia cadastrado");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao cadastrar tipo de terapia",
-      );
+      showToast(getErrorMessage(err, "Erro ao cadastrar tipo de terapia"));
     }
   };
 
@@ -156,9 +154,7 @@ export function SettingsPageContent() {
       setSelectedTherapyTypeId("");
       showToast("Especialidade vinculada ao terapeuta");
     } catch (err) {
-      showToast(
-        err instanceof HttpError ? err.message : "Erro ao vincular especialidade",
-      );
+      showToast(getErrorMessage(err, "Erro ao vincular especialidade"));
     }
   };
 
@@ -205,11 +201,10 @@ export function SettingsPageContent() {
       )}
       {isError && activeTab !== "clinica" && (
         <ErrorState
-          message={
-            (therapyTypes.error ?? counts.error) instanceof HttpError
-              ? (therapyTypes.error as HttpError).message
-              : "Erro ao carregar configurações."
-          }
+          message={getErrorMessage(
+            therapyTypes.error ?? counts.error,
+            "Erro ao carregar configurações.",
+          )}
         />
       )}
 
