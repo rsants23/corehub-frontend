@@ -1,13 +1,6 @@
-export type DayOfWeek =
-  | "SUNDAY"
-  | "MONDAY"
-  | "TUESDAY"
-  | "WEDNESDAY"
-  | "THURSDAY"
-  | "FRIDAY"
-  | "SATURDAY";
-
 export type EntityStatus = "active" | "inactive";
+
+export type AbsenceType = "patient" | "therapist";
 
 export type AppointmentStatus =
   | "SCHEDULED"
@@ -16,19 +9,14 @@ export type AppointmentStatus =
   | "RESCHEDULED"
   | "COMPLETED";
 
-export type AbsenceType = "patient" | "therapist";
-
 export type SuggestionStatus = "PENDING" | "ACCEPTED" | "REJECTED" | "APPLIED";
 
 export interface Patient {
   id: string;
   name: string;
-  guardianName: string;
-  insurance: string;
-  therapies: string[];
-  status: EntityStatus;
   birthDate?: string;
   notes?: string;
+  status: EntityStatus;
 }
 
 export interface Therapist {
@@ -48,10 +36,13 @@ export interface Appointment {
   therapistId: string;
   therapistName: string;
   therapyType: string;
-  dayOfWeek: DayOfWeek;
+  therapyTypeId?: string;
+  dayOfWeek?: string;
   startTime: string;
   endTime: string;
-  status: AppointmentStatus;
+  durationMinutes?: number;
+  notes?: string;
+  status: string;
 }
 
 export interface Absence {
@@ -70,22 +61,7 @@ export interface RescheduleSuggestion {
   suggestedTime: string;
   suggestedTherapist: string;
   confidenceLevel: number;
-  status: SuggestionStatus;
-}
-
-export interface Role {
-  id: string;
-  name: string;
-  description: string;
-  permissions: string[];
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  status: EntityStatus;
+  status: string;
 }
 
 export interface DashboardStats {
@@ -102,4 +78,11 @@ export interface ReportMetrics {
   idleHours: number;
   recoveredAppointments: number;
   therapistOccupancy: { name: string; rate: number }[];
+}
+
+export interface TherapyType {
+  id: string;
+  name: string;
+  description?: string;
+  durationMinutes: number;
 }

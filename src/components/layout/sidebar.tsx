@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import { NAV_ITEMS } from "@/constants/routes";
+import { useClinicSettingsStore } from "@/stores/clinic-settings-store";
 import { cn } from "@/utils/cn";
 
 const iconMap = {
@@ -28,6 +29,7 @@ const iconMap = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const clinicName = useClinicSettingsStore((state) => state.clinic.name);
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
@@ -68,7 +70,9 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border p-4">
-        <p className="text-xs text-sidebar-foreground/60">MVP — dados mockados</p>
+        <p className="truncate text-xs text-sidebar-foreground/60">
+          {clinicName}
+        </p>
       </div>
     </aside>
   );

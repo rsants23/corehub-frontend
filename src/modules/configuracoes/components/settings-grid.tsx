@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Building2,
   HeartPulse,
@@ -12,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useToastStore } from "@/stores/toast-store";
 
 const settingsItems = [
   {
@@ -47,6 +50,8 @@ const settingsItems = [
 ];
 
 export function SettingsGrid() {
+  const showToast = useToastStore((state) => state.showToast);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {settingsItems.map((item) => {
@@ -54,6 +59,16 @@ export function SettingsGrid() {
         return (
           <Card
             key={item.title}
+            role="button"
+            tabIndex={0}
+            onClick={() =>
+              showToast(`${item.title} — configuração disponível em breve`)
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                showToast(`${item.title} — configuração disponível em breve`);
+              }
+            }}
             className="cursor-pointer border shadow-sm transition-shadow hover:shadow-md"
           >
             <CardHeader>

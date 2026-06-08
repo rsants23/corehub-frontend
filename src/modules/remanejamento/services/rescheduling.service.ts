@@ -1,20 +1,22 @@
 import { apiService } from "@/services/api";
-import { rescheduleSuggestionsMock } from "@/modules/remanejamento/mocks/reschedule-suggestions.mock";
+import { mapRescheduleSuggestion } from "@/utils/mappers";
 import type { RescheduleSuggestion } from "@/types";
 
-const USE_MOCK = true;
-
 export const reschedulingService = {
-  async listSuggestions(): Promise<RescheduleSuggestion[]> {
-    if (USE_MOCK) return rescheduleSuggestionsMock;
-    return apiService.rescheduling.listSuggestions(
-      new Date().toISOString().slice(0, 10),
-    );
+  async listSuggestions(date: string): Promise<RescheduleSuggestion[]> {
+    const data = await apiService.rescheduling.listSuggestions(date);
+    return data.map(mapRescheduleSuggestion);
   },
-  async generateSuggestions(): Promise<RescheduleSuggestion[]> {
-    if (USE_MOCK) return rescheduleSuggestionsMock;
-    return apiService.rescheduling.simulate(
-      new Date().toISOString().slice(0, 10),
-    );
+  async generateSuggestions(date: string): Promise<RescheduleSuggestion[]> {
+    const result = await apiService.rescheduling.simulate(date);
+    return result.suggestions.map(mapRescheduleSuggestion);
+  },
+  async accept(id: string, date: string): Promise<RescheduleSuggestion[]> {
+    await apiService.rescheduling.accept(id);
+    return this.listSuggestions(date);
+  },
+  async reject(id: string, date: string): Promise<RescheduleSuggestion[]> {
+    await apiService.rescheduling.reject(id);
+    return this.listSuggestions(date);
   },
 };

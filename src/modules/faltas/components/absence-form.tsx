@@ -30,24 +30,43 @@ import {
   absenceSchema,
   type AbsenceFormValues,
 } from "@/modules/faltas/schemas/absence.schema";
+import { getTodayDate } from "@/utils/date";
+import type { Appointment, Therapist } from "@/types";
 
-export function AbsenceForm() {
+interface AbsenceFormProps {
+  therapists: Therapist[];
+  appointments: Appointment[];
+  onRegister: (values: AbsenceFormValues) => Promise<void>;
+  isSubmitting?: boolean;
+}
+
+export function AbsenceForm({
+  therapists,
+  appointments,
+  onRegister,
+  isSubmitting,
+}: AbsenceFormProps) {
   const form = useForm<AbsenceFormValues>({
     resolver: zodResolver(absenceSchema),
     defaultValues: {
-      type: "patient",
-      date: new Date().toISOString().slice(0, 10),
-      name: "",
+      type: "therapist",
+      date: getTodayDate(),
+      therapistId: "",
+      appointmentId: "",
       reason: "",
       notes: "",
     },
   });
 
-  const onSubmit = (_values: AbsenceFormValues) => {
+  const absenceType = form.watch("type");
+
+  const onSubmit = async (values: AbsenceFormValues) => {
+    await onRegister(values);
     form.reset({
-      type: "patient",
-      date: new Date().toISOString().slice(0, 10),
-      name: "",
+      type: "therapist",
+      date: getTodayDate(),
+      therapistId: "",
+      appointmentId: "",
       reason: "",
       notes: "",
     });
@@ -98,19 +117,65 @@ export function AbsenceForm() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do paciente ou terapeuta" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            {absenceType === "therapist" ? (
+              <FormField
+                control={form.control}
+                name="therapistId"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Terapeuta</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o terapeuta" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {therapists.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <FormField
+                control={form.control}
+                name="appointmentId"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Atendimento do dia</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o atendimento" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {appointments.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            Gere a agenda do dia primeiro
+                          </SelectItem>
+                        ) : (
+                          appointments.map((a) => (
+                            <SelectItem key={a.id} value={a.id}>
+                              {a.patientName} — {a.therapyType} ({a.startTime})
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="reason"
@@ -128,20 +193,19 @@ export function AbsenceForm() {
               control={form.control}
               name="notes"
               render={({ field }) => (
-                <FormItem className="md:col-span-2">
+                <FormItem>
                   <FormLabel>Observações</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Informações adicionais (opcional)"
-                      {...field}
-                    />
+                    <Textarea placeholder="Opcional" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className="md:col-span-2">
-              <Button type="submit">Registrar falta</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Registrando..." : "Registrar falta"}
+              </Button>
             </div>
           </form>
         </Form>

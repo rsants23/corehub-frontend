@@ -1,3 +1,5 @@
+"use client";
+
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 
@@ -11,7 +13,7 @@ export function AppShell({ title, description, children }: AppShellProps) {
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <div className="md:pl-64">
+      <div className="relative z-10 min-h-screen md:ml-64">
         <Header title={title} description={description} />
         <main className="p-4 md:p-6">{children}</main>
       </div>

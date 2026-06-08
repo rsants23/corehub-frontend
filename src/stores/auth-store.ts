@@ -12,6 +12,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => boolean;
   logout: () => void;
+  updateUser: (data: Partial<AuthUser>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -31,6 +32,10 @@ export const useAuthStore = create<AuthState>()(
         return true;
       },
       logout: () => set({ user: null, isAuthenticated: false }),
+      updateUser: (data) =>
+        set((state) =>
+          state.user ? { user: { ...state.user, ...data } } : state,
+        ),
     }),
     { name: "corehub-auth" },
   ),

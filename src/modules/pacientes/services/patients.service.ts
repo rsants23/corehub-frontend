@@ -1,16 +1,29 @@
 import { apiService } from "@/services/api";
-import { patientsMock } from "@/modules/pacientes/mocks/patients.mock";
+import { mapPatient } from "@/utils/mappers";
+import type {
+  CreatePatientPayload,
+  UpdatePatientPayload,
+} from "@/types/api";
 import type { Patient } from "@/types";
-
-const USE_MOCK = true;
 
 export const patientsService = {
   async list(): Promise<Patient[]> {
-    if (USE_MOCK) return patientsMock;
-    return apiService.patients.list();
+    const data = await apiService.patients.list();
+    return data.map(mapPatient);
   },
-  async getById(id: string): Promise<Patient | undefined> {
-    if (USE_MOCK) return patientsMock.find((p) => p.id === id);
-    return apiService.patients.getById(id);
+  async getById(id: string): Promise<Patient> {
+    const data = await apiService.patients.getById(id);
+    return mapPatient(data);
+  },
+  async create(payload: CreatePatientPayload): Promise<Patient> {
+    const data = await apiService.patients.create(payload);
+    return mapPatient(data);
+  },
+  async update(id: string, payload: UpdatePatientPayload): Promise<Patient> {
+    const data = await apiService.patients.update(id, payload);
+    return mapPatient(data);
+  },
+  async remove(id: string): Promise<void> {
+    await apiService.patients.remove(id);
   },
 };

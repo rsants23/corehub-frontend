@@ -26,7 +26,7 @@ export function ReportsDashboard({ metrics }: ReportsDashboardProps) {
         <StatCard
           title="Taxa de faltas"
           value={formatPercent(metrics.absenceRate)}
-          description="Últimos 30 dias"
+          description="Do dia"
           icon={UserX}
         />
         <StatCard
@@ -57,23 +57,29 @@ export function ReportsDashboard({ metrics }: ReportsDashboardProps) {
           <CardTitle className="text-lg">Ocupação por terapeuta</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={metrics.therapistOccupancy}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis unit="%" tick={{ fontSize: 12 }} />
-                <Tooltip
-                  formatter={(value: number) => [`${value}%`, "Ocupação"]}
-                />
-                <Bar
-                  dataKey="rate"
-                  fill="hsl(var(--primary))"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {metrics.therapistOccupancy.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Gere a agenda do dia para calcular ocupação por terapeuta.
+            </p>
+          ) : (
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={metrics.therapistOccupancy}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                  <YAxis unit="%" tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value}%`, "Ocupação"]}
+                  />
+                  <Bar
+                    dataKey="rate"
+                    fill="hsl(var(--primary))"
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
