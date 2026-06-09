@@ -1,4 +1,5 @@
 import { apiService } from "@/services/api";
+import { ApiError } from "@/services/api-error";
 import { WEEKDAYS } from "@/utils/date";
 import { mapFixedSchedule } from "@/utils/mappers";
 import type {
@@ -33,7 +34,14 @@ export const schedulesService = {
     return apiService.schedules.generateDaily(date);
   },
   async getDaily(date: string) {
-    return apiService.schedules.getDaily(date);
+    try {
+      return await apiService.schedules.getDaily(date);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return null;
+      }
+      throw err;
+    }
   },
   async getFreeSlots(date: string) {
     return apiService.schedules.getFreeSlots(date);

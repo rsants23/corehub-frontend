@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
+    if (pathname.startsWith("/admin")) return;
 
     void restoreSession().then(() => {
       const { isAuthenticated: authed } = useAuthStore.getState();

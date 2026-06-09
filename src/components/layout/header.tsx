@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, Search } from "lucide-react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROLE_LABELS, ROUTES } from "@/constants/routes";
@@ -10,9 +10,10 @@ import { useAuthStore } from "@/stores/auth-store";
 interface HeaderProps {
   title: string;
   description?: string;
+  onMenuClick?: () => void;
 }
 
-export function Header({ title, description }: HeaderProps) {
+export function Header({ title, description, onMenuClick }: HeaderProps) {
   const router = useRouter();
   const { user, logout } = useAuthStore();
 
@@ -24,13 +25,24 @@ export function Header({ title, description }: HeaderProps) {
   return (
     <header className="sticky top-0 z-20 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between gap-4 px-4 md:px-6">
-        <div className="min-w-0">
-          <h1 className="truncate text-lg font-semibold md:text-xl">{title}</h1>
-          {description && (
-            <p className="truncate text-sm text-muted-foreground">
-              {description}
-            </p>
-          )}
+        <div className="flex min-w-0 items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 md:hidden"
+            onClick={onMenuClick}
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold md:text-xl">{title}</h1>
+            {description && (
+              <p className="truncate text-sm text-muted-foreground">
+                {description}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">

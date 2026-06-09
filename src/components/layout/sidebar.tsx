@@ -1,40 +1,11 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  BarChart3,
-  Calendar,
-  LayoutDashboard,
-  ScrollText,
-  Settings,
-  Shuffle,
-  Stethoscope,
-  UserCog,
-  UserX,
-  Users,
-} from "lucide-react";
-import { getNavItemsForRole } from "@/constants/routes";
+import { Calendar } from "lucide-react";
+import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useAuthStore } from "@/stores/auth-store";
-import { cn } from "@/utils/cn";
-
-const iconMap = {
-  LayoutDashboard,
-  Users,
-  Stethoscope,
-  Calendar,
-  UserX,
-  Shuffle,
-  BarChart3,
-  Settings,
-  UserCog,
-  ScrollText,
-} as const;
 
 export function Sidebar() {
-  const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
-  const navItems = getNavItemsForRole(user?.role);
 
   const clinicLabel =
     user?.role === "THERAPIST" && user?.clinic?.tradeName
@@ -53,31 +24,7 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 p-4">
-        {navItems.map((item) => {
-          const Icon = iconMap[item.icon as keyof typeof iconMap];
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {user?.role === "THERAPIST" && item.href.includes("agendas")
-                ? "Minha Agenda"
-                : item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <SidebarNav />
 
       <div className="border-t border-sidebar-border p-4">
         <p className="truncate text-xs font-medium text-sidebar-foreground/80">

@@ -6,12 +6,14 @@ export const ROUTES = {
   patients: "/pacientes",
   therapists: "/terapeutas",
   schedules: "/agendas",
+  dailyAgenda: "/agenda-diaria",
   absences: "/faltas",
   rescheduling: "/remanejamento",
   reports: "/relatorios",
   users: "/usuarios",
   settings: "/configuracoes",
   audit: "/auditoria",
+  consents: "/consentimentos",
   forbidden: "/acesso-negado",
 } as const;
 
@@ -48,6 +50,12 @@ export const NAV_ITEMS = [
     roles: ["ADMIN", "COORDINATOR", "RECEPTION", "THERAPIST"] as UserRole[],
   },
   {
+    label: "Agenda diária",
+    href: ROUTES.dailyAgenda,
+    icon: "CalendarDays",
+    roles: ["ADMIN", "COORDINATOR", "RECEPTION", "THERAPIST"] as UserRole[],
+  },
+  {
     label: "Faltas",
     href: ROUTES.absences,
     icon: "UserX",
@@ -66,10 +74,16 @@ export const NAV_ITEMS = [
     roles: ["ADMIN", "COORDINATOR"] as UserRole[],
   },
   {
+    label: "Consentimentos",
+    href: ROUTES.consents,
+    icon: "ShieldCheck",
+    roles: ["ADMIN", "COORDINATOR", "RECEPTION"] as UserRole[],
+  },
+  {
     label: "Usuários",
     href: ROUTES.users,
     icon: "UserCog",
-    roles: ["ADMIN"] as UserRole[],
+    roles: ["ADMIN", "COORDINATOR"] as UserRole[],
   },
   {
     label: "Configurações",

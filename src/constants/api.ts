@@ -48,6 +48,26 @@ export const API_ENDPOINTS = {
   },
   auditLogs: "/audit-logs",
   consents: "/consents",
+  admin: {
+    login: "/admin/auth/login",
+    me: "/admin/auth/me",
+    dashboardStats: "/admin/dashboard/stats",
+    plans: "/admin/plans",
+    planById: (id: string) => `/admin/plans/${id}`,
+    clinics: "/admin/clinics",
+    clinicById: (id: string) => `/admin/clinics/${id}`,
+    clinicStatus: (id: string) => `/admin/clinics/${id}/status`,
+    clinicSubscription: (id: string) => `/admin/clinics/${id}/subscription`,
+    clinicSubscriptionRenew: (id: string) =>
+      `/admin/clinics/${id}/subscription/renew`,
+    clinicInvoices: (id: string) => `/admin/clinics/${id}/invoices`,
+    clinicUsers: (id: string) => `/admin/clinics/${id}/users`,
+    clinicUserStatus: (id: string, userId: string) =>
+      `/admin/clinics/${id}/users/${userId}/status`,
+    invoiceById: (id: string) => `/admin/invoices/${id}`,
+    invoiceMarkPaid: (id: string) => `/admin/invoices/${id}/mark-paid`,
+    invoiceCancel: (id: string) => `/admin/invoices/${id}/cancel`,
+  },
 } as const;
 
 export const QUERY_KEYS = {
@@ -69,4 +89,13 @@ export const QUERY_KEYS = {
   dashboard: (date: string) => ["dashboard", date] as const,
   reports: (date: string) => ["reports", date] as const,
   auditLogs: ["audit-logs"] as const,
+  consents: (patientId?: string) =>
+    patientId ? (["consents", patientId] as const) : (["consents"] as const),
+  adminDashboard: ["admin", "dashboard"] as const,
+  adminClinics: ["admin", "clinics"] as const,
+  adminClinic: (id: string) => ["admin", "clinic", id] as const,
+  adminPlans: ["admin", "plans"] as const,
+  adminClinicUsers: (id: string) => ["admin", "clinic-users", id] as const,
+  adminClinicInvoices: (id: string) => ["admin", "clinic-invoices", id] as const,
+  adminMe: ["admin", "me"] as const,
 };

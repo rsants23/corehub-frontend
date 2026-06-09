@@ -141,11 +141,26 @@ Mapa completo: [../docs/api-integration-map.md](../docs/api-integration-map.md)
 - **TanStack Query** — cache, loading, invalidação após mutations
 - **Zustand** — auth (`corehub-auth`), toast e configurações locais
 
+## Painel Central Admin (Beta)
+
+Acesso separado do login clínico em `/admin/login`.
+
+| Rota | Descrição |
+|------|-----------|
+| `/admin/login` | Login administrativo global |
+| `/admin/dashboard` | Dashboard SaaS |
+| `/admin/clinicas` | Gestão de clínicas |
+
+Sessão admin isolada: `corehub-admin-auth` (localStorage) + `corehub-admin-session` (cookie).
+
+Ver [../docs/admin-panel.md](../docs/admin-panel.md).
+
 ## Documentação relacionada
 
 | Documento | Conteúdo |
 |-----------|----------|
 | [../docs/multi-tenant-architecture.md](../docs/multi-tenant-architecture.md) | Arquitetura SaaS |
+| [../docs/admin-panel.md](../docs/admin-panel.md) | Painel Central Admin |
 | [../docs/api-integration-map.md](../docs/api-integration-map.md) | Mapa frontend ↔ API |
 | [../docs/rbac-matrix.md](../docs/rbac-matrix.md) | Permissões por papel |
 | [../docs/business-rules.md](../docs/business-rules.md) | Regras de negócio |

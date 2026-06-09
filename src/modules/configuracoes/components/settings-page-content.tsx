@@ -298,10 +298,13 @@ export function SettingsPageContent() {
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="clinic-address">
-                Endereço{" "}
-                <span className="text-muted-foreground">(rascunho local)</span>
+              <Label htmlFor="clinic-address" className="flex flex-wrap items-center gap-2">
+                Endereço
+                <Badge variant="outline">Rascunho local</Badge>
               </Label>
+              <p className="text-xs text-muted-foreground">
+                Essas informações ficam salvas apenas neste navegador.
+              </p>
               <Textarea
                 id="clinic-address"
                 value={clinicForm.address}
@@ -509,15 +512,16 @@ export function SettingsPageContent() {
 
       {activeTab === "usuarios" && (
         <div className="space-y-4">
-          <Badge variant="outline">
-            Rascunho local — alterações não persistem no backend (use /usuarios
-            para gestão real)
+          <Badge variant="secondary">
+            Gestão real via API — acesse a página Usuários no menu
           </Badge>
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>Usuário logado</CardTitle>
-              <CardDescription>Dados da sessão atual</CardDescription>
+              <CardDescription>
+                Rascunho local da sessão (não altera o cadastro no servidor)
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -575,7 +579,11 @@ export function SettingsPageContent() {
 
       {activeTab === "perfis" && (
         <div className="space-y-4">
-          <Badge variant="outline">Rascunho local — não sincronizado com o servidor</Badge>
+          <Badge variant="outline">Rascunho local</Badge>
+          <p className="text-sm text-muted-foreground">
+            Não confundir com o RBAC real do backend. Essas permissões ficam
+            salvas apenas neste navegador.
+          </p>
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {profiles.map((profile) => (
             <Card key={profile.id}>
@@ -615,7 +623,7 @@ export function SettingsPageContent() {
               <Badge variant="outline">Rascunho local</Badge>
             </CardTitle>
             <CardDescription>
-              Planos aceitos — ainda não persistidos no backend
+              Essas informações ficam salvas apenas neste navegador.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
