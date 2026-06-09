@@ -1,4 +1,10 @@
-export type UserRole = "ADMIN" | "COORDINATOR" | "RECEPTION" | "THERAPIST";
+export type UserRole =
+  | "ADMIN"
+  | "COORDINATOR"
+  | "RECEPTION"
+  | "THERAPIST"
+  | "PATIENT"
+  | "GUARDIAN";
 
 export interface AuthClinic {
   tradeName: string;
@@ -11,6 +17,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
+  username?: string;
   role: UserRole;
   tenantId: string;
   clinicId: string;
@@ -18,6 +25,12 @@ export interface AuthUser {
 }
 
 export interface LoginPayload {
+  identifier: string;
+  password: string;
+}
+
+/** @deprecated Login legado — CNPJ + e-mail + senha */
+export interface LegacyLoginPayload {
   cnpj: string;
   email: string;
   password: string;

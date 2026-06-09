@@ -19,6 +19,12 @@ const PROTECTED_PREFIXES = [
   ROUTES.audit,
   ROUTES.consents,
   ROUTES.forbidden,
+  ROUTES.myAgenda,
+  ROUTES.myPatients,
+  ROUTES.portal,
+  ROUTES.portalAgenda,
+  ROUTES.portalConsents,
+  ROUTES.portalProfile,
 ];
 
 function isProtectedPath(pathname: string): boolean {
@@ -58,6 +64,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(
       new URL(hasSession ? ROUTES.dashboard : ROUTES.login, request.url),
     );
+  }
+
+  if (pathname === ROUTES.portal && hasSession) {
+    return NextResponse.redirect(new URL(ROUTES.portalAgenda, request.url));
   }
 
   if (isProtectedPath(pathname) && !hasSession) {

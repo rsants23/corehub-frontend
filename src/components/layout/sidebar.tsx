@@ -7,10 +7,19 @@ import { useAuthStore } from "@/stores/auth-store";
 export function Sidebar() {
   const user = useAuthStore((state) => state.user);
 
-  const clinicLabel =
-    user?.role === "THERAPIST" && user?.clinic?.tradeName
-      ? `${user.clinic.tradeName} — Minha Agenda`
-      : user?.clinic?.tradeName ?? "Efata CoreHub";
+  const clinicLabel = (() => {
+    if (user?.role === "THERAPIST") {
+      return user?.clinic?.tradeName
+        ? `${user.clinic.tradeName} — Terapeuta`
+        : "Portal do Terapeuta";
+    }
+    if (user?.role === "PATIENT" || user?.role === "GUARDIAN") {
+      return user?.clinic?.tradeName
+        ? `${user.clinic.tradeName} — Portal`
+        : "Portal do Paciente";
+    }
+    return user?.clinic?.tradeName ?? "Efata CoreHub";
+  })();
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">

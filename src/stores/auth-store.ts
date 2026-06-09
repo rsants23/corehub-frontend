@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { authService } from "@/modules/auth/auth.service";
-import { normalizeCnpj } from "@/modules/auth/schemas/login.schema";
 import {
   clearAuthSessionCookie,
   setAuthSessionCookie,
@@ -14,7 +13,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isHydrated: boolean;
   isLoading: boolean;
-  login: (cnpj: string, email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (data: Partial<AuthUser>) => void;
   restoreSession: () => Promise<void>;
@@ -30,12 +29,11 @@ export const useAuthStore = create<AuthState>()(
       isHydrated: false,
       isLoading: false,
 
-      login: async (cnpj: string, email: string, password: string) => {
+      login: async (identifier: string, password: string) => {
         set({ isLoading: true });
         try {
           const response = await authService.login({
-            cnpj: normalizeCnpj(cnpj),
-            email: email.toLowerCase(),
+            identifier: identifier.trim(),
             password,
           });
 

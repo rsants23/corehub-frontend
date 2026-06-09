@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ROUTES } from "@/constants/routes";
+import { ROUTES, getHomeRouteForRole } from "@/constants/routes";
 import { setAuthSessionCookie } from "@/lib/auth-cookie";
 import { setUnauthorizedHandler } from "@/services/auth-interceptor";
 import { useAuthStore } from "@/stores/auth-store";
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (authed) {
         setAuthSessionCookie();
         if (pathname === ROUTES.login) {
-          router.replace(ROUTES.dashboard);
+          router.replace(getHomeRouteForRole(useAuthStore.getState().user?.role));
         }
       }
     });

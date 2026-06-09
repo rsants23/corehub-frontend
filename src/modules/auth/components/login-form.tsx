@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ROUTES } from "@/constants/routes";
+import { getHomeRouteForRole } from "@/constants/routes";
 import {
   loginSchema,
   type LoginFormValues,
@@ -39,17 +39,17 @@ export function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      cnpj: "",
-      email: "",
+      identifier: "",
       password: "",
     },
   });
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      await login(values.cnpj, values.email, values.password);
+      await login(values.identifier, values.password);
       showToast("Login realizado com sucesso", "success");
-      router.push(ROUTES.dashboard);
+      const role = useAuthStore.getState().user?.role;
+      router.push(getHomeRouteForRole(role));
     } catch (err) {
       showToast(getErrorMessage(err, "Erro ao fazer login"), "error");
     }
@@ -63,9 +63,9 @@ export function LoginForm() {
             <Calendar className="h-6 w-6" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Efata CoreHub</CardTitle>
+            <CardTitle className="text-2xl">Bem-vindo ao Efata CoreHub</CardTitle>
             <CardDescription>
-              Acesse com o CNPJ da clínica, e-mail e senha
+              Utilize seu usuário ou e-mail cadastrado.
             </CardDescription>
           </div>
         </CardHeader>
@@ -74,27 +74,14 @@ export function LoginForm() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="cnpj"
+                name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CNPJ da clínica</FormLabel>
-                    <FormControl>
-                      <Input placeholder="00.000.000/0000-00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>E-mail</FormLabel>
+                    <FormLabel>Usuário ou E-mail</FormLabel>
                     <FormControl>
                       <Input
-                        type="email"
-                        placeholder="seu@email.com"
+                        placeholder="admin ou seu@email.com"
+                        autoComplete="username"
                         {...field}
                       />
                     </FormControl>
@@ -109,7 +96,12 @@ export function LoginForm() {
                   <FormItem>
                     <FormLabel>Senha</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} />
+                      <Input
+                        type="password"
+                        placeholder="••••••"
+                        autoComplete="current-password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -48,6 +48,29 @@ export const API_ENDPOINTS = {
   },
   auditLogs: "/audit-logs",
   consents: "/consents",
+  therapistPortal: {
+    me: "/therapist/me",
+    agenda: (date: string) => `/therapist/me/agenda?date=${date}`,
+    patients: "/therapist/me/patients",
+    patientById: (id: string) => `/therapist/me/patients/${id}`,
+    appointmentStatus: (id: string) => `/therapist/me/appointments/${id}/status`,
+  },
+  patientPortal: {
+    me: "/patient-portal/me",
+    agenda: (patientId: string, dateFrom?: string, dateTo?: string) => {
+      const params = new URLSearchParams({ patientId });
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo) params.set("dateTo", dateTo);
+      return `/patient-portal/agenda?${params.toString()}`;
+    },
+    patientById: (id: string) => `/patient-portal/patients/${id}`,
+    consents: (patientId?: string) =>
+      patientId
+        ? `/patient-portal/consents?patientId=${patientId}`
+        : "/patient-portal/consents",
+    cancelAppointment: (id: string) =>
+      `/patient-portal/appointments/${id}/cancel`,
+  },
   admin: {
     login: "/admin/auth/login",
     me: "/admin/auth/me",
@@ -102,4 +125,15 @@ export const QUERY_KEYS = {
   adminClinicUsers: (id: string) => ["admin", "clinic-users", id] as const,
   adminClinicInvoices: (id: string) => ["admin", "clinic-invoices", id] as const,
   adminMe: ["admin", "me"] as const,
+  therapistPortalMe: ["therapist-portal", "me"] as const,
+  therapistAgenda: (date: string) => ["therapist-portal", "agenda", date] as const,
+  therapistPatients: ["therapist-portal", "patients"] as const,
+  therapistPatient: (id: string) => ["therapist-portal", "patient", id] as const,
+  patientPortalMe: ["patient-portal", "me"] as const,
+  patientPortalAgenda: (patientId: string, from?: string, to?: string) =>
+    ["patient-portal", "agenda", patientId, from, to] as const,
+  patientPortalConsents: (patientId?: string) =>
+    patientId
+      ? (["patient-portal", "consents", patientId] as const)
+      : (["patient-portal", "consents"] as const),
 };

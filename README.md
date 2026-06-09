@@ -57,7 +57,11 @@ npm run start
 
 ## Login
 
-Autenticação via **CNPJ + e-mail + senha** → JWT armazenado em `localStorage`.
+Autenticação via **usuário ou e-mail + senha** → JWT armazenado em `localStorage`.
+
+Tela em `/login`: campos *Usuário ou E-mail* e *Senha*. O tenant/clínica são resolvidos automaticamente pela API.
+
+Admin global permanece separado em `/admin/login` (e-mail + senha).
 
 ### Credenciais de desenvolvimento
 

@@ -145,7 +145,14 @@ export function UserFormDialog({
                     </FormControl>
                     <SelectContent>
                       {(
-                        ["ADMIN", "COORDINATOR", "RECEPTION", "THERAPIST"] as const
+                        [
+                          "ADMIN",
+                          "COORDINATOR",
+                          "RECEPTION",
+                          "THERAPIST",
+                          "PATIENT",
+                          "GUARDIAN",
+                        ] as const
                       ).map((r) => (
                         <SelectItem key={r} value={r}>
                           {ROLE_LABELS[r]}

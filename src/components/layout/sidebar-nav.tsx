@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Shuffle,
   Stethoscope,
+  UserCircle,
   UserCog,
   UserX,
   Users,
@@ -33,6 +34,7 @@ const iconMap = {
   UserCog,
   ScrollText,
   ShieldCheck,
+  UserCircle,
 } as const;
 
 interface SidebarNavProps {
@@ -65,9 +67,7 @@ export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {user?.role === "THERAPIST" && item.href.includes("agendas")
-              ? "Minha Agenda"
-              : item.label}
+            {item.label}
           </Link>
         );
       })}
