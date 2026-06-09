@@ -62,6 +62,10 @@ export const API_ENDPOINTS = {
       `/admin/clinics/${id}/subscription/renew`,
     clinicInvoices: (id: string) => `/admin/clinics/${id}/invoices`,
     clinicUsers: (id: string) => `/admin/clinics/${id}/users`,
+    clinicUserById: (id: string, userId: string) =>
+      `/admin/clinics/${id}/users/${userId}`,
+    clinicUserPassword: (id: string, userId: string) =>
+      `/admin/clinics/${id}/users/${userId}/password`,
     clinicUserStatus: (id: string, userId: string) =>
       `/admin/clinics/${id}/users/${userId}/status`,
     invoiceById: (id: string) => `/admin/invoices/${id}`,

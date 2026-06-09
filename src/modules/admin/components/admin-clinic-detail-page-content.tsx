@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ADMIN_ROUTES } from "@/constants/admin-routes";
 import { QUERY_KEYS } from "@/constants/api";
+import { AdminClinicUsersTab } from "@/modules/admin/components/admin-clinic-users-tab";
 import { adminApiService } from "@/modules/admin/services/admin-api.service";
 import {
   formatCnpj,
@@ -125,7 +126,13 @@ export function AdminClinicDetailPageContent({ clinicId }: { clinicId: string })
       </div>
 
       {tab === "overview" && <OverviewTab clinic={clinic} canManage={canManage} />}
-      {tab === "users" && <UsersTab users={users ?? []} />}
+      {tab === "users" && (
+        <AdminClinicUsersTab
+          clinicId={clinicId}
+          users={users ?? []}
+          canManage={canManage}
+        />
+      )}
       {tab === "license" && (
         <LicenseTab
           clinicId={clinicId}
@@ -203,35 +210,6 @@ function OverviewTab({
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function UsersTab({ users }: { users: Awaited<ReturnType<typeof adminApiService.listClinicUsers>> }) {
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Nome</TableHead>
-          <TableHead>E-mail</TableHead>
-          <TableHead>Role</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Terapeuta</TableHead>
-          <TableHead>Último acesso</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((u) => (
-          <TableRow key={u.id}>
-            <TableCell>{u.name}</TableCell>
-            <TableCell>{u.email}</TableCell>
-            <TableCell>{u.role}</TableCell>
-            <TableCell>{u.status}</TableCell>
-            <TableCell>{u.therapist?.name ?? "—"}</TableCell>
-            <TableCell>{formatDateTime(u.lastAccessAt)}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
   );
 }
 

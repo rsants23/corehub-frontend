@@ -158,4 +158,58 @@ export const adminApiService = {
       API_ENDPOINTS.admin.clinicUsers(clinicId),
     );
   },
+
+  createClinicUser(
+    clinicId: string,
+    payload: {
+      name: string;
+      email: string;
+      password: string;
+      role: string;
+      status?: string;
+    },
+  ) {
+    return adminHttpClient.post<AdminClinicUser>(
+      API_ENDPOINTS.admin.clinicUsers(clinicId),
+      payload,
+    );
+  },
+
+  updateClinicUser(
+    clinicId: string,
+    userId: string,
+    payload: {
+      name?: string;
+      email?: string;
+      role?: string;
+      status?: string;
+    },
+  ) {
+    return adminHttpClient.patch<AdminClinicUser>(
+      API_ENDPOINTS.admin.clinicUserById(clinicId, userId),
+      payload,
+    );
+  },
+
+  resetClinicUserPassword(
+    clinicId: string,
+    userId: string,
+    password: string,
+  ) {
+    return adminHttpClient.patch<{ id: string; passwordUpdated: boolean }>(
+      API_ENDPOINTS.admin.clinicUserPassword(clinicId, userId),
+      { password },
+    );
+  },
+
+  updateClinicUserStatus(
+    clinicId: string,
+    userId: string,
+    status: string,
+  ) {
+    return adminHttpClient.patch<{ id: string; status: string }>(
+      API_ENDPOINTS.admin.clinicUserStatus(clinicId, userId),
+      { status },
+    );
+  },
 };
