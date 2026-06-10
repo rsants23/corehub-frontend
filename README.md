@@ -59,7 +59,11 @@ npm run start
 
 Autenticação via **usuário ou e-mail + senha** → JWT armazenado em `localStorage`.
 
-Tela em `/login`: campos *Usuário ou E-mail* e *Senha*. O tenant/clínica são resolvidos automaticamente pela API.
+Tela em `/login`: campos *Usuário ou E-mail* e *Senha*.
+
+- **Um vínculo** → JWT direto
+- **Múltiplos vínculos** → `/selecionar-clinica` (clínicas vencidas aparecem bloqueadas)
+- Após escolher → `POST /auth/select-clinic` → redirecionamento por role
 
 Admin global permanece separado em `/admin/login` (e-mail + senha).
 

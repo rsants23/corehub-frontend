@@ -56,6 +56,10 @@ export function middleware(request: NextRequest) {
 
   const hasSession = request.cookies.has(AUTH_SESSION_COOKIE);
 
+  if (pathname === ROUTES.selectClinic) {
+    return NextResponse.next();
+  }
+
   if (pathname === ROUTES.login && hasSession) {
     return NextResponse.redirect(new URL(ROUTES.dashboard, request.url));
   }

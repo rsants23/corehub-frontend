@@ -5,7 +5,14 @@ import {
   clearAuthSessionCookie,
   setAuthSessionCookie,
 } from "@/lib/auth-cookie";
-import type { AuthUser } from "@/types/auth";
+import type {
+  AuthUser,
+  LoginSelectionResponse,
+  LoginSuccessResponse,
+} from "@/types/auth";
+import { isLoginSelectionResponse } from "@/types/auth";
+
+export type LoginResult = "authenticated" | "selection_required";
 
 interface AuthState {
   user: AuthUser | null;
@@ -13,11 +20,30 @@ interface AuthState {
   isAuthenticated: boolean;
   isHydrated: boolean;
   isLoading: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
+  pendingClinicSelection: LoginSelectionResponse | null;
+  login: (identifier: string, password: string) => Promise<LoginResult>;
+  selectClinic: (clinicId: string) => Promise<void>;
+  clearPendingSelection: () => void;
   logout: () => void;
   updateUser: (data: Partial<AuthUser>) => void;
   restoreSession: () => Promise<void>;
   setHydrated: () => void;
+}
+
+async function finalizeAuth(
+  response: LoginSuccessResponse,
+  set: (state: Partial<AuthState>) => void,
+) {
+  set({
+    token: response.accessToken,
+    user: response.user,
+    isAuthenticated: true,
+    pendingClinicSelection: null,
+  });
+
+  const me = await authService.getMe(response.accessToken);
+  set({ user: me, isAuthenticated: true });
+  setAuthSessionCookie();
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -28,6 +54,7 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isHydrated: false,
       isLoading: false,
+      pendingClinicSelection: null,
 
       login: async (identifier: string, password: string) => {
         set({ isLoading: true });
@@ -37,22 +64,42 @@ export const useAuthStore = create<AuthState>()(
             password,
           });
 
-          set({
-            token: response.accessToken,
-            user: response.user,
-            isAuthenticated: true,
-          });
+          if (isLoginSelectionResponse(response)) {
+            set({
+              pendingClinicSelection: response,
+              isAuthenticated: false,
+              token: null,
+              user: null,
+            });
+            return "selection_required";
+          }
 
-          const me = await authService.getMe(response.accessToken);
-          set({
-            user: me,
-            isAuthenticated: true,
-          });
-          setAuthSessionCookie();
+          await finalizeAuth(response, set);
+          return "authenticated";
         } finally {
           set({ isLoading: false });
         }
       },
+
+      selectClinic: async (clinicId: string) => {
+        const pending = get().pendingClinicSelection;
+        if (!pending) {
+          throw new Error("Nenhuma seleção de clínica pendente.");
+        }
+
+        set({ isLoading: true });
+        try {
+          const response = await authService.selectClinic({
+            selectionToken: pending.selectionToken,
+            clinicId,
+          });
+          await finalizeAuth(response, set);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      clearPendingSelection: () => set({ pendingClinicSelection: null }),
 
       logout: () => {
         clearAuthSessionCookie();
@@ -60,6 +107,7 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          pendingClinicSelection: null,
         });
       },
 
@@ -82,7 +130,12 @@ export const useAuthStore = create<AuthState>()(
           setAuthSessionCookie();
         } catch {
           clearAuthSessionCookie();
-          set({ user: null, token: null, isAuthenticated: false });
+          set({
+            user: null,
+            token: null,
+            isAuthenticated: false,
+            pendingClinicSelection: null,
+          });
         } finally {
           set({ isLoading: false });
         }
@@ -96,6 +149,7 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        pendingClinicSelection: state.pendingClinicSelection,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();

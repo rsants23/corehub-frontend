@@ -31,7 +31,11 @@ import {
 import { QUERY_KEYS } from "@/constants/api";
 import { adminApiService } from "@/modules/admin/services/admin-api.service";
 import { formatDateTime } from "@/modules/admin/utils/format";
-import { getErrorMessage } from "@/services/api-error";
+import {
+  getErrorMessage,
+  parseIdentityExistsConflict,
+  type IdentityExistsConflictBody,
+} from "@/services/api-error";
 import { useToastStore } from "@/stores/toast-store";
 import type { AdminClinicUser } from "@/types/admin";
 
@@ -228,9 +232,20 @@ function CreateUserDialog({
     password: "",
     role: "RECEPTION",
   });
+  const [linkPrompt, setLinkPrompt] =
+    useState<IdentityExistsConflictBody | null>(null);
+
+  const resetForm = () => {
+    setForm({ name: "", email: "", password: "", role: "RECEPTION" });
+    setLinkPrompt(null);
+  };
 
   const mutation = useMutation({
-    mutationFn: () => adminApiService.createClinicUser(clinicId, form),
+    mutationFn: (confirmLink?: boolean) =>
+      adminApiService.createClinicUser(clinicId, {
+        ...form,
+        ...(confirmLink ? { confirmLink: true } : {}),
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.adminClinicUsers(clinicId),
@@ -238,41 +253,87 @@ function CreateUserDialog({
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.adminClinic(clinicId),
       });
-      showToast("Usuário criado com sucesso", "success");
+      showToast(
+        linkPrompt ? "Pessoa vinculada à clínica" : "Usuário criado com sucesso",
+        "success",
+      );
       onOpenChange(false);
-      setForm({ name: "", email: "", password: "", role: "RECEPTION" });
+      resetForm();
     },
-    onError: (err) =>
-      showToast(getErrorMessage(err, "Erro ao criar usuário"), "error"),
+    onError: (err) => {
+      const conflict = parseIdentityExistsConflict(err);
+      if (conflict) {
+        setLinkPrompt(conflict);
+        return;
+      }
+      showToast(getErrorMessage(err, "Erro ao criar usuário"), "error");
+    },
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo usuário da clínica</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-3">
-          <Field label="Nome" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
-          <Field label="E-mail" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
-          <Field label="Senha" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
-          <div>
-            <Label>Perfil</Label>
-            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {USER_ROLES.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(value) => {
+          onOpenChange(value);
+          if (!value) resetForm();
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo usuário da clínica</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Field label="Nome" value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
+            <Field label="E-mail" type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} />
+            <Field label="Senha" type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} />
+            <div>
+              <Label>Perfil</Label>
+              <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {USER_ROLES.map((r) => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+              {mutation.isPending ? "Criando..." : "Criar usuário"}
+            </Button>
           </div>
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
-            {mutation.isPending ? "Criando..." : "Criar usuário"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!linkPrompt} onOpenChange={(v) => !v && setLinkPrompt(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Vincular pessoa existente</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Este e-mail já pertence a uma pessoa cadastrada no CoreHub (
+            <strong>{linkPrompt?.identity.name}</strong>). Deseja vincular essa
+            pessoa à clínica atual?
+          </p>
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setLinkPrompt(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={mutation.isPending}
+              onClick={() => mutation.mutate(true)}
+            >
+              {mutation.isPending ? "Vinculando..." : "Vincular à clínica"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

@@ -2,6 +2,7 @@ import type { UserRole } from "@/types/auth";
 
 export const ROUTES = {
   login: "/login",
+  selectClinic: "/selecionar-clinica",
   dashboard: "/dashboard",
   patients: "/pacientes",
   therapists: "/terapeutas",

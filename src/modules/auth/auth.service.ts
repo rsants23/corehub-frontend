@@ -4,12 +4,24 @@ import type {
   LoginPayload,
   LoginResponse,
   MeResponse,
+  SelectClinicPayload,
+  LoginSuccessResponse,
 } from "@/types/auth";
 
 export const authService = {
   async login(payload: LoginPayload): Promise<LoginResponse> {
     return httpClient.post<LoginResponse>(
       API_ENDPOINTS.auth.login,
+      payload,
+      { skipAuth: true },
+    );
+  },
+
+  async selectClinic(
+    payload: SelectClinicPayload,
+  ): Promise<LoginSuccessResponse> {
+    return httpClient.post<LoginSuccessResponse>(
+      API_ENDPOINTS.auth.selectClinic,
       payload,
       { skipAuth: true },
     );

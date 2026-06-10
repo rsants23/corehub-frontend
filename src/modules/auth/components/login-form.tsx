@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getHomeRouteForRole } from "@/constants/routes";
+import { getHomeRouteForRole, ROUTES } from "@/constants/routes";
 import {
   loginSchema,
   type LoginFormValues,
@@ -46,7 +46,11 @@ export function LoginForm() {
 
   const onSubmit = async (values: LoginFormValues) => {
     try {
-      await login(values.identifier, values.password);
+      const result = await login(values.identifier, values.password);
+      if (result === "selection_required") {
+        router.push(ROUTES.selectClinic);
+        return;
+      }
       showToast("Login realizado com sucesso", "success");
       const role = useAuthStore.getState().user?.role;
       router.push(getHomeRouteForRole(role));

@@ -56,8 +56,54 @@ export function createConnectionError(): ApiError {
   );
 }
 
+export interface IdentityExistsConflictBody {
+  code: "IDENTITY_EXISTS";
+  message: string;
+  identity: {
+    id: string;
+    name: string;
+    email: string;
+    username: string | null;
+  };
+}
+
+function isIdentityExistsBody(
+  value: unknown,
+): value is IdentityExistsConflictBody {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "code" in value &&
+    (value as IdentityExistsConflictBody).code === "IDENTITY_EXISTS"
+  );
+}
+
+/** Extrai conflito IDENTITY_EXISTS de resposta 409 do NestJS. */
+export function parseIdentityExistsConflict(
+  error: unknown,
+): IdentityExistsConflictBody | null {
+  if (!(error instanceof ApiError) || error.status !== 409) {
+    return null;
+  }
+
+  const message = error.data?.message;
+  if (isIdentityExistsBody(message)) {
+    return message;
+  }
+
+  if (isIdentityExistsBody(error.data)) {
+    return error.data as IdentityExistsConflictBody;
+  }
+
+  return null;
+}
+
 export function getErrorMessage(error: unknown, fallback?: string): string {
   if (error instanceof ApiError) {
+    const identityConflict = parseIdentityExistsConflict(error);
+    if (identityConflict) {
+      return identityConflict.message;
+    }
     return error.message;
   }
 

@@ -164,9 +164,10 @@ export const adminApiService = {
     payload: {
       name: string;
       email: string;
-      password: string;
+      password?: string;
       role: string;
       status?: string;
+      confirmLink?: boolean;
     },
   ) {
     return adminHttpClient.post<AdminClinicUser>(

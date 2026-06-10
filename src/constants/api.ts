@@ -4,6 +4,7 @@ export const API_BASE_URL =
 export const API_ENDPOINTS = {
   auth: {
     login: "/auth/login",
+    selectClinic: "/auth/select-clinic",
     me: "/auth/me",
   },
   clinics: {
