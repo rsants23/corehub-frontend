@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
-import { Shield } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -58,9 +58,7 @@ export function AdminLoginForm() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-violet-950 to-slate-900 p-4">
       <Card className="w-full max-w-md border-violet-200/20 shadow-xl">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600 text-white">
-            <Shield className="h-6 w-6" />
-          </div>
+          <BrandLogo variant="full" size="lg" priority className="mx-auto" />
           <div>
             <CardTitle className="text-2xl">CoreHub Admin</CardTitle>
             <CardDescription>

@@ -1,6 +1,7 @@
 "use client";
 
-import { Calendar, X } from "lucide-react";
+import { X } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { SidebarNav } from "@/components/layout/sidebar-nav";
 import { useAuthStore } from "@/stores/auth-store";
@@ -33,15 +34,7 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
         aria-hidden={!open}
       >
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <Calendar className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Efata CoreHub</p>
-              <p className="text-xs text-sidebar-foreground/70">SaaS clínico</p>
-            </div>
-          </div>
+          <BrandLogo variant="full" size="md" className="min-w-0 flex-1" />
           <Button
             variant="ghost"
             size="icon"

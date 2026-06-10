@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/button";
 import { ADMIN_ROUTES } from "@/constants/admin-routes";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
@@ -60,14 +61,8 @@ export function AdminHeader({ title, description }: AdminHeaderProps) {
 
 export function AdminSidebarBrand() {
   return (
-    <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-600 text-white">
-        <Shield className="h-5 w-5" />
-      </div>
-      <div>
-        <p className="text-sm font-semibold">CoreHub Admin</p>
-        <p className="text-xs text-sidebar-foreground/70">Painel Central SaaS</p>
-      </div>
+    <div className="flex h-16 items-center border-b border-sidebar-border px-4">
+      <BrandLogo variant="full" size="md" className="min-w-0" />
     </div>
   );
 }

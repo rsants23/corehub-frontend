@@ -40,15 +40,26 @@ const iconMap = {
 interface SidebarNavProps {
   onNavigate?: () => void;
   className?: string;
+  collapsed?: boolean;
 }
 
-export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
+export function SidebarNav({
+  onNavigate,
+  className,
+  collapsed = false,
+}: SidebarNavProps) {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
   const navItems = getNavItemsForRole(user?.role);
 
   return (
-    <nav className={cn("flex-1 space-y-1 p-4", className)}>
+    <nav
+      className={cn(
+        "flex-1 space-y-1 p-4",
+        collapsed && "px-2",
+        className,
+      )}
+    >
       {navItems.map((item) => {
         const Icon = iconMap[item.icon as keyof typeof iconMap];
         const isActive =
@@ -59,15 +70,19 @@ export function SidebarNav({ onNavigate, className }: SidebarNavProps) {
             key={item.href}
             href={item.href}
             onClick={onNavigate}
+            title={collapsed ? item.label : undefined}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+              "flex items-center rounded-lg text-sm font-medium transition-colors",
+              collapsed
+                ? "justify-center px-2 py-2.5"
+                : "gap-3 px-3 py-2.5",
               isActive
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
                 : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            {!collapsed ? item.label : null}
           </Link>
         );
       })}

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Header } from "@/components/layout/header";
 import { MobileSidebar } from "@/components/layout/mobile-sidebar";
 import { Sidebar } from "@/components/layout/sidebar";
+import { useSidebarStore } from "@/stores/sidebar-store";
+import { cn } from "@/utils/cn";
 
 interface AppShellProps {
   title: string;
@@ -13,6 +15,7 @@ interface AppShellProps {
 
 export function AppShell({ title, description, children }: AppShellProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const collapsed = useSidebarStore((state) => state.collapsed);
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,7 +24,12 @@ export function AppShell({ title, description, children }: AppShellProps) {
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
       />
-      <div className="relative z-10 min-h-screen md:ml-64">
+      <div
+        className={cn(
+          "relative z-10 min-h-screen transition-[margin] duration-200",
+          collapsed ? "md:ml-16" : "md:ml-64",
+        )}
+      >
         <Header
           title={title}
           description={description}

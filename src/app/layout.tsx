@@ -11,7 +11,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Efata CoreHub",
   description:
-    "Sistema de remanejamento automático de agenda para clínicas terapêuticas",
+    "Plataforma Inteligente de Gestão Clínica e Remanejamento Automático",
+  applicationName: "Efata CoreHub",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
