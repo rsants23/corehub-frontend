@@ -19,6 +19,8 @@ import {
 import { ROUTES } from "@/constants/routes";
 import {
   useTherapistAgendaQuery,
+  useTherapistPatientQuery,
+  useTherapistPatientsQuery,
   useTherapistPortalMutations,
 } from "@/modules/portals/portal.queries";
 import { getErrorMessage } from "@/services/api-error";

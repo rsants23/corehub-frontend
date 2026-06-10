@@ -58,6 +58,7 @@ export const patientPortalApi = {
   requestCancellation: (appointmentId: string) =>
     httpClient.patch<{ id: string; status: string }>(
       API_ENDPOINTS.patientPortal.cancelAppointment(appointmentId),
+      {},
     ),
 };
 
