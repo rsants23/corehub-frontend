@@ -12,29 +12,8 @@ export interface RequestOptions {
   method?: HttpMethod;
   body?: unknown;
   headers?: Record<string, string>;
-  /** Quando true, não envia Authorization (ex.: login) */
+  /** Quando true, não envia cookie de sessão (ex.: login) */
   skipAuth?: boolean;
-  /** Token explícito (ex.: imediatamente após login, antes do persist) */
-  token?: string;
-}
-
-const AUTH_STORAGE_KEY = "corehub-auth";
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as {
-      state?: { token?: string | null };
-    };
-
-    return parsed.state?.token ?? null;
-  } catch {
-    return null;
-  }
 }
 
 class HttpClient {
@@ -45,25 +24,17 @@ class HttpClient {
   }
 
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-    const { method = "GET", body, headers = {}, skipAuth = false, token: explicitToken } = options;
-
-    const authHeaders: Record<string, string> = {};
-    if (!skipAuth) {
-      const token = explicitToken ?? getAuthToken();
-      if (token) {
-        authHeaders.Authorization = `Bearer ${token}`;
-      }
-    }
+    const { method = "GET", body, headers = {}, skipAuth = false } = options;
 
     let response: Response;
 
     try {
       response = await fetch(`${this.baseUrl}${endpoint}`, {
         method,
+        credentials: skipAuth ? "same-origin" : "include",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...authHeaders,
           ...headers,
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,

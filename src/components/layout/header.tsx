@@ -5,6 +5,7 @@ import { Bell, LogOut, Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROLE_LABELS, ROUTES } from "@/constants/routes";
+import { ClinicSwitcher } from "@/components/layout/clinic-switcher";
 import { useAuthStore } from "@/stores/auth-store";
 
 interface HeaderProps {
@@ -18,8 +19,7 @@ export function Header({ title, description, onMenuClick }: HeaderProps) {
   const { user, logout } = useAuthStore();
 
   const handleLogout = () => {
-    logout();
-    router.push(ROUTES.login);
+    void logout().then(() => router.push(ROUTES.login));
   };
 
   return (
@@ -46,6 +46,7 @@ export function Header({ title, description, onMenuClick }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
+          <ClinicSwitcher />
           <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input

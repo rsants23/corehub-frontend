@@ -11,7 +11,11 @@ export const adminAuthService = {
     );
   },
 
-  getMe(token?: string) {
-    return adminHttpClient.get<AdminUser>(API_ENDPOINTS.admin.me, { token });
+  getMe() {
+    return adminHttpClient.get<AdminUser>(API_ENDPOINTS.admin.me);
+  },
+
+  logout() {
+    return adminHttpClient.post(API_ENDPOINTS.admin.logout, {});
   },
 };

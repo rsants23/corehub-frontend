@@ -6,9 +6,12 @@ import {
   setAuthSessionCookie,
 } from "@/lib/auth-cookie";
 import type {
+  ActiveClinic,
   AuthUser,
   LoginSelectionResponse,
   LoginSuccessResponse,
+  MembershipSummary,
+  MeResponse,
 } from "@/types/auth";
 import { isLoginSelectionResponse } from "@/types/auth";
 
@@ -16,18 +19,62 @@ export type LoginResult = "authenticated" | "selection_required";
 
 interface AuthState {
   user: AuthUser | null;
-  token: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
   isLoading: boolean;
   pendingClinicSelection: LoginSelectionResponse | null;
+  memberships: MembershipSummary[];
+  activeClinic: ActiveClinic | null;
   login: (identifier: string, password: string) => Promise<LoginResult>;
   selectClinic: (clinicId: string) => Promise<void>;
+  switchClinic: (clinicId: string) => Promise<void>;
+  loadMemberships: () => Promise<void>;
   clearPendingSelection: () => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (data: Partial<AuthUser>) => void;
   restoreSession: () => Promise<void>;
   setHydrated: () => void;
+}
+
+function deriveActiveClinic(
+  user: MeResponse | AuthUser,
+  memberships: MembershipSummary[],
+): ActiveClinic {
+  const match = memberships.find((m) => m.clinicId === user.clinicId);
+  if (match) {
+    return {
+      clinicId: match.clinicId,
+      clinicName: match.clinicName,
+      role: match.role,
+      tenantId: match.tenantId,
+    };
+  }
+
+  return {
+    clinicId: user.clinicId,
+    clinicName: user.clinic?.tradeName ?? "Clínica",
+    role: user.role,
+    tenantId: user.tenantId,
+  };
+}
+
+async function syncSessionContext(set: (state: Partial<AuthState>) => void) {
+  const me = await authService.getMe();
+  let memberships: MembershipSummary[] = [];
+
+  try {
+    memberships = await authService.getMemberships();
+  } catch {
+    memberships = [];
+  }
+
+  set({
+    user: me,
+    isAuthenticated: true,
+    memberships,
+    activeClinic: deriveActiveClinic(me, memberships),
+  });
+  setAuthSessionCookie();
 }
 
 async function finalizeAuth(
@@ -35,26 +82,24 @@ async function finalizeAuth(
   set: (state: Partial<AuthState>) => void,
 ) {
   set({
-    token: response.accessToken,
     user: response.user,
     isAuthenticated: true,
     pendingClinicSelection: null,
   });
 
-  const me = await authService.getMe(response.accessToken);
-  set({ user: me, isAuthenticated: true });
-  setAuthSessionCookie();
+  await syncSessionContext(set);
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
       isAuthenticated: false,
       isHydrated: false,
       isLoading: false,
       pendingClinicSelection: null,
+      memberships: [],
+      activeClinic: null,
 
       login: async (identifier: string, password: string) => {
         set({ isLoading: true });
@@ -68,8 +113,9 @@ export const useAuthStore = create<AuthState>()(
             set({
               pendingClinicSelection: response,
               isAuthenticated: false,
-              token: null,
               user: null,
+              memberships: [],
+              activeClinic: null,
             });
             return "selection_required";
           }
@@ -99,15 +145,49 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      switchClinic: async (clinicId: string) => {
+        const { activeClinic } = get();
+        if (activeClinic?.clinicId === clinicId) {
+          return;
+        }
+
+        set({ isLoading: true });
+        try {
+          const response = await authService.switchClinic({ clinicId });
+          await finalizeAuth(response, set);
+        } finally {
+          set({ isLoading: false });
+        }
+      },
+
+      loadMemberships: async () => {
+        if (!get().isAuthenticated) return;
+
+        const memberships = await authService.getMemberships();
+        const user = get().user;
+        set({
+          memberships,
+          activeClinic: user
+            ? deriveActiveClinic(user, memberships)
+            : get().activeClinic,
+        });
+      },
+
       clearPendingSelection: () => set({ pendingClinicSelection: null }),
 
-      logout: () => {
+      logout: async () => {
+        try {
+          await authService.logout();
+        } catch {
+          // Limpa sessão local mesmo se a API falhar
+        }
         clearAuthSessionCookie();
         set({
           user: null,
-          token: null,
           isAuthenticated: false,
           pendingClinicSelection: null,
+          memberships: [],
+          activeClinic: null,
         });
       },
 
@@ -117,24 +197,17 @@ export const useAuthStore = create<AuthState>()(
         ),
 
       restoreSession: async () => {
-        const { token } = get();
-        if (!token) {
-          set({ isAuthenticated: false, user: null });
-          return;
-        }
-
         set({ isLoading: true });
         try {
-          const me = await authService.getMe();
-          set({ user: me, isAuthenticated: true });
-          setAuthSessionCookie();
+          await syncSessionContext(set);
         } catch {
           clearAuthSessionCookie();
           set({
             user: null,
-            token: null,
             isAuthenticated: false,
             pendingClinicSelection: null,
+            memberships: [],
+            activeClinic: null,
           });
         } finally {
           set({ isLoading: false });
@@ -146,10 +219,11 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "corehub-auth",
       partialize: (state) => ({
-        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
         pendingClinicSelection: state.pendingClinicSelection,
+        memberships: state.memberships,
+        activeClinic: state.activeClinic,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();

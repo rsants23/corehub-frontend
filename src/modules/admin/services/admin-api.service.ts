@@ -6,6 +6,7 @@ import type {
   AdminDashboardStats,
   AdminInvoice,
   AdminPlan,
+  AdminSharedUser,
   AdminSubscription,
   BillingCycle,
   ClinicStatus,
@@ -211,6 +212,12 @@ export const adminApiService = {
     return adminHttpClient.patch<{ id: string; status: string }>(
       API_ENDPOINTS.admin.clinicUserStatus(clinicId, userId),
       { status },
+    );
+  },
+
+  listSharedUsers() {
+    return adminHttpClient.get<AdminSharedUser[]>(
+      API_ENDPOINTS.admin.sharedUsers,
     );
   },
 };

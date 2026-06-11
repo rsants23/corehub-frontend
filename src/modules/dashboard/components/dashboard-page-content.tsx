@@ -17,6 +17,7 @@ import { useDashboard } from "@/hooks/use-dashboard";
 import { getErrorMessage } from "@/services/api-error";
 import { getTodayDate } from "@/utils/date";
 import { formatPercent } from "@/utils/format";
+import { ReschedulingOpportunitiesCard } from "@/modules/dashboard/components/rescheduling-opportunities-card";
 
 export function DashboardPageContent() {
   const today = getTodayDate();
@@ -80,6 +81,13 @@ export function DashboardPageContent() {
           </div>
 
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            {stats.reschedulingOpportunities && (
+              <div className="lg:col-span-2">
+                <ReschedulingOpportunitiesCard
+                  opportunities={stats.reschedulingOpportunities}
+                />
+              </div>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Resumo do dia ({today})</CardTitle>

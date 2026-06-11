@@ -22,7 +22,7 @@ interface ReportsDashboardProps {
 export function ReportsDashboard({ metrics }: ReportsDashboardProps) {
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
           title="Taxa de faltas"
           value={formatPercent(metrics.absenceRate)}
@@ -30,22 +30,30 @@ export function ReportsDashboard({ metrics }: ReportsDashboardProps) {
           icon={UserX}
         />
         <StatCard
-          title="Horas ociosas"
-          value={`${metrics.idleHours}h`}
-          description="Tempo sem atendimento"
+          title="Horas recuperadas"
+          value={`${metrics.recoveredHours}h`}
+          description="Via remanejamento aplicado"
           icon={Clock}
         />
         <StatCard
           title="Atendimentos recuperados"
           value={metrics.recoveredAppointments}
-          description="Via remanejamento automático"
+          description="Sugestões aplicadas na agenda"
           icon={RotateCcw}
+        />
+        <StatCard
+          title="Ocupação da agenda"
+          value={formatPercent(metrics.scheduleOccupancyRate)}
+          description="Capacidade utilizada hoje"
+          icon={Activity}
         />
         <StatCard
           title="Ocupação média"
           value={formatPercent(
-            metrics.therapistOccupancy.reduce((acc, t) => acc + t.rate, 0) /
-              metrics.therapistOccupancy.length,
+            metrics.therapistOccupancy.length > 0
+              ? metrics.therapistOccupancy.reduce((acc, t) => acc + t.rate, 0) /
+                  metrics.therapistOccupancy.length
+              : 0,
           )}
           description="Média dos terapeutas"
           icon={Activity}

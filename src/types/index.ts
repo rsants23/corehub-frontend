@@ -61,7 +61,22 @@ export interface RescheduleSuggestion {
   suggestedTime: string;
   suggestedTherapist: string;
   confidenceLevel: number;
+  reason: string;
+  reasonLabel: string;
+  reasonDetail?: string;
   status: string;
+}
+
+export interface ReschedulingOpportunities {
+  date: string;
+  total: number;
+  impactMinutes: number;
+  utilizationGainPercent: number;
+  byReason: {
+    THERAPIST_ABSENCE: { count: number; impactMinutes: number };
+    PATIENT_CANCELLATION_RECOVERY: { count: number; impactMinutes: number };
+    SLOT_OPTIMIZATION: { count: number; impactMinutes: number };
+  };
 }
 
 export interface DashboardStats {
@@ -71,12 +86,15 @@ export interface DashboardStats {
   freeSlots: number;
   suggestedReschedules: number;
   occupancyRate: number;
+  reschedulingOpportunities?: ReschedulingOpportunities;
 }
 
 export interface ReportMetrics {
   absenceRate: number;
   idleHours: number;
   recoveredAppointments: number;
+  recoveredHours: number;
+  scheduleOccupancyRate: number;
   therapistOccupancy: { name: string; rate: number }[];
 }
 

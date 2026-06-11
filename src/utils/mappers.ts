@@ -118,6 +118,12 @@ export function mapCancellation(api: ApiCancellation): Absence {
   };
 }
 
+const REASON_LABELS: Record<string, string> = {
+  THERAPIST_ABSENCE: "Ausência de terapeuta",
+  PATIENT_CANCELLATION_RECOVERY: "Recuperação de cancelamento",
+  SLOT_OPTIMIZATION: "Otimização de slot",
+};
+
 export function mapRescheduleSuggestion(
   api: ApiRescheduleSuggestion,
 ): RescheduleSuggestion {
@@ -129,6 +135,9 @@ export function mapRescheduleSuggestion(
     suggestedTime: `${formatTimeFromIso(api.suggestedStartTime)} — ${formatTimeFromIso(api.suggestedEndTime)}`,
     suggestedTherapist: api.suggestedTherapistName,
     confidenceLevel: Math.min(100, Math.round(api.score)),
+    reason: api.reason,
+    reasonLabel: REASON_LABELS[api.reason] ?? api.reason,
+    reasonDetail: api.reasonDetail ?? undefined,
     status: api.status,
   };
 }

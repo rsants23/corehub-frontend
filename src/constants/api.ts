@@ -1,11 +1,14 @@
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3100/api";
+  process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 export const API_ENDPOINTS = {
   auth: {
     login: "/auth/login",
     selectClinic: "/auth/select-clinic",
+    memberships: "/auth/memberships",
+    switchClinic: "/auth/switch-clinic",
     me: "/auth/me",
+    logout: "/auth/logout",
   },
   clinics: {
     me: "/clinics/me",
@@ -37,6 +40,7 @@ export const API_ENDPOINTS = {
     generate: "/rescheduling/generate",
     simulate: "/rescheduling/simulate",
     suggestions: "/rescheduling/suggestions",
+    opportunities: "/rescheduling/opportunities",
     accept: (id: string) => `/rescheduling/suggestions/${id}/accept`,
     approve: (id: string) => `/rescheduling/suggestions/${id}/approve`,
     reject: (id: string) => `/rescheduling/suggestions/${id}/reject`,
@@ -46,6 +50,7 @@ export const API_ENDPOINTS = {
     dashboard: "/reports/dashboard",
     occupancy: "/reports/occupancy",
     absences: "/reports/absences",
+    rescheduling: "/reports/rescheduling",
   },
   auditLogs: "/audit-logs",
   consents: "/consents",
@@ -75,6 +80,7 @@ export const API_ENDPOINTS = {
   admin: {
     login: "/admin/auth/login",
     me: "/admin/auth/me",
+    logout: "/admin/auth/logout",
     dashboardStats: "/admin/dashboard/stats",
     plans: "/admin/plans",
     planById: (id: string) => `/admin/plans/${id}`,
@@ -95,11 +101,13 @@ export const API_ENDPOINTS = {
     invoiceById: (id: string) => `/admin/invoices/${id}`,
     invoiceMarkPaid: (id: string) => `/admin/invoices/${id}/mark-paid`,
     invoiceCancel: (id: string) => `/admin/invoices/${id}/cancel`,
+    sharedUsers: "/admin/shared-users",
   },
 } as const;
 
 export const QUERY_KEYS = {
   auth: ["auth", "me"] as const,
+  authMemberships: ["auth", "memberships"] as const,
   patients: ["patients"] as const,
   patient: (id: string) => ["patients", id] as const,
   therapists: ["therapists"] as const,
@@ -114,6 +122,7 @@ export const QUERY_KEYS = {
   absences: (date: string) => ["absences", date] as const,
   cancellations: (date: string) => ["cancellations", date] as const,
   suggestions: (date: string) => ["suggestions", date] as const,
+  opportunities: (date: string) => ["opportunities", date] as const,
   dashboard: (date: string) => ["dashboard", date] as const,
   reports: (date: string) => ["reports", date] as const,
   auditLogs: ["audit-logs"] as const,
@@ -126,6 +135,7 @@ export const QUERY_KEYS = {
   adminClinicUsers: (id: string) => ["admin", "clinic-users", id] as const,
   adminClinicInvoices: (id: string) => ["admin", "clinic-invoices", id] as const,
   adminMe: ["admin", "me"] as const,
+  adminSharedUsers: ["admin", "shared-users"] as const,
   therapistPortalMe: ["therapist-portal", "me"] as const,
   therapistAgenda: (date: string) => ["therapist-portal", "agenda", date] as const,
   therapistPatients: ["therapist-portal", "patients"] as const,

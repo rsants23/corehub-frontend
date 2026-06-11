@@ -7,6 +7,7 @@ import {
   CreditCard,
   DollarSign,
   Timer,
+  TrendingUp,
   UserRound,
   Users,
 } from "lucide-react";
@@ -30,23 +31,37 @@ export function AdminDashboardPageContent() {
 
   return (
     <AdminShell title="Dashboard" description="Visão global e financeira do SaaS CoreHub">
-      {isLoading && <StatCardsSkeleton count={10} />}
+      {isLoading && <StatCardsSkeleton count={14} />}
       {isError && (
         <ErrorState message={getErrorMessage(error, "Erro ao carregar dashboard.")} />
       )}
       {stats && (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <StatCard title="MRR" value={formatCurrency(stats.mrr)} icon={DollarSign} />
+            <StatCard title="ARR" value={formatCurrency(stats.arr)} icon={TrendingUp} />
+            <StatCard
+              title="Receita prevista"
+              value={formatCurrency(stats.projectedRevenue)}
+              description="MRR + faturas pendentes e vencidas"
+              icon={DollarSign}
+            />
+            <StatCard
+              title="Clínicas ativas (licença)"
+              value={stats.activeSubscriptionClinics}
+              icon={Building2}
+            />
+            <StatCard title="Clínicas trial" value={stats.trialClinics} icon={Building2} />
+            <StatCard
+              title="Clínicas suspensas"
+              value={stats.suspendedClinics}
+              icon={AlertTriangle}
+            />
             <StatCard title="Total de clínicas" value={stats.totalClinics} icon={Building2} />
             <StatCard title="Clínicas ativas" value={stats.activeClinics} icon={Building2} />
             <StatCard title="Inativas / suspensas" value={stats.inactiveClinics} icon={AlertTriangle} />
             <StatCard title="Total de usuários" value={stats.totalUsers} icon={Users} />
             <StatCard title="Total de pacientes" value={stats.totalPatients} icon={UserRound} />
-            <StatCard
-              title="MRR previsto"
-              value={formatCurrency(stats.monthlyProjectedRevenue)}
-              icon={DollarSign}
-            />
             <StatCard
               title="Recebido no mês"
               value={formatCurrency(stats.paidRevenueThisMonth)}

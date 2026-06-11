@@ -9,21 +9,19 @@ import type { AdminUser } from "@/types/admin-auth";
 
 interface AdminAuthState {
   user: AdminUser | null;
-  token: string | null;
   isAuthenticated: boolean;
   isHydrated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   restoreSession: () => Promise<void>;
   setHydrated: () => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       user: null,
-      token: null,
       isAuthenticated: false,
       isHydrated: false,
       isLoading: false,
@@ -34,12 +32,11 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           const response = await adminAuthService.login(email, password);
 
           set({
-            token: response.accessToken,
             user: response.user,
             isAuthenticated: true,
           });
 
-          const me = await adminAuthService.getMe(response.accessToken);
+          const me = await adminAuthService.getMe();
           set({ user: me, isAuthenticated: true });
           setAdminAuthSessionCookie();
         } finally {
@@ -47,22 +44,20 @@ export const useAdminAuthStore = create<AdminAuthState>()(
         }
       },
 
-      logout: () => {
+      logout: async () => {
+        try {
+          await adminAuthService.logout();
+        } catch {
+          // Limpa sessão local mesmo se a API falhar
+        }
         clearAdminAuthSessionCookie();
         set({
           user: null,
-          token: null,
           isAuthenticated: false,
         });
       },
 
       restoreSession: async () => {
-        const { token } = get();
-        if (!token) {
-          set({ isAuthenticated: false, user: null });
-          return;
-        }
-
         set({ isLoading: true });
         try {
           const me = await adminAuthService.getMe();
@@ -70,7 +65,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
           setAdminAuthSessionCookie();
         } catch {
           clearAdminAuthSessionCookie();
-          set({ user: null, token: null, isAuthenticated: false });
+          set({ user: null, isAuthenticated: false });
         } finally {
           set({ isLoading: false });
         }
@@ -81,7 +76,6 @@ export const useAdminAuthStore = create<AdminAuthState>()(
     {
       name: "corehub-admin-auth",
       partialize: (state) => ({
-        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),

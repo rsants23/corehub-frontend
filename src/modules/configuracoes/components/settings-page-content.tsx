@@ -9,6 +9,7 @@ import {
   Trash2,
   Users,
   Wallet,
+  Construction,
 } from "lucide-react";
 import { AppShell } from "@/components/layout/app-shell";
 import { ErrorState, LoadingState } from "@/components/shared/query-states";
@@ -579,11 +580,17 @@ export function SettingsPageContent() {
 
       {activeTab === "perfis" && (
         <div className="space-y-4">
-          <Badge variant="outline">Rascunho local</Badge>
-          <p className="text-sm text-muted-foreground">
-            Não confundir com o RBAC real do backend. Essas permissões ficam
-            salvas apenas neste navegador.
-          </p>
+          <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+            <Construction className="mt-0.5 h-5 w-5 shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Funcionalidade em desenvolvimento</p>
+              <p className="text-sm text-amber-800">
+                Perfis de acesso personalizados ainda não estão integrados ao
+                backend. As permissões exibidas abaixo são apenas um rascunho
+                local deste navegador e não alteram o RBAC real do sistema.
+              </p>
+            </div>
+          </div>
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {profiles.map((profile) => (
             <Card key={profile.id}>
@@ -616,14 +623,23 @@ export function SettingsPageContent() {
       )}
 
       {activeTab === "convenios" && (
+        <div className="space-y-4">
+          <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+            <Construction className="mt-0.5 h-5 w-5 shrink-0" />
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Funcionalidade em desenvolvimento</p>
+              <p className="text-sm text-amber-800">
+                O cadastro de convênios ainda não está integrado ao backend. Os
+                dados exibidos abaixo são apenas um rascunho local deste
+                navegador.
+              </p>
+            </div>
+          </div>
         <Card>
           <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              Convênios
-              <Badge variant="outline">Rascunho local</Badge>
-            </CardTitle>
+            <CardTitle>Convênios</CardTitle>
             <CardDescription>
-              Essas informações ficam salvas apenas neste navegador.
+              Gerencie os convênios aceitos pela clínica.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -672,6 +688,7 @@ export function SettingsPageContent() {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
     </AppShell>
   );

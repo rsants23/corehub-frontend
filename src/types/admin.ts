@@ -18,6 +18,8 @@ export interface AdminPlan {
   maxPatients: number | null;
   maxTherapists: number | null;
   maxUsers: number | null;
+  storageLimit: number | null;
+  features: string[];
   isActive: boolean;
 }
 
@@ -67,6 +69,23 @@ export interface AdminClinicUser {
   lastAccessAt: string | null;
 }
 
+export interface AdminSharedUserClinic {
+  clinicId: string;
+  clinicName: string;
+  tenantId: string;
+  role: string;
+  membershipId: string;
+}
+
+export interface AdminSharedUser {
+  id: string;
+  name: string;
+  email: string;
+  username: string | null;
+  lastLoginAt: string | null;
+  clinics: AdminSharedUserClinic[];
+}
+
 export interface AdminInvoice {
   id: string;
   clinicId: string;
@@ -88,6 +107,12 @@ export interface AdminDashboardStats {
   inactiveClinics: number;
   totalUsers: number;
   totalPatients: number;
+  mrr: number;
+  arr: number;
+  activeSubscriptionClinics: number;
+  trialClinics: number;
+  suspendedClinics: number;
+  projectedRevenue: number;
   monthlyProjectedRevenue: number;
   paidRevenueThisMonth: number;
   pendingRevenue: number;

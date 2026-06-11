@@ -24,6 +24,26 @@ export interface ClinicLoginOption {
   blockReason?: string;
 }
 
+export interface MembershipSummary {
+  clinicId: string;
+  clinicName: string;
+  role: UserRole;
+  tenantId: string;
+  available: boolean;
+  blockReason?: string;
+}
+
+export interface ActiveClinic {
+  clinicId: string;
+  clinicName: string;
+  role: UserRole;
+  tenantId: string;
+}
+
+export interface SwitchClinicPayload {
+  clinicId: string;
+}
+
 export interface AuthUser {
   id: string;
   identityId?: string;
@@ -50,7 +70,7 @@ export interface SelectClinicPayload {
 }
 
 export interface LoginSuccessResponse {
-  accessToken: string;
+  accessToken?: string;
   user: Omit<AuthUser, "clinic">;
 }
 

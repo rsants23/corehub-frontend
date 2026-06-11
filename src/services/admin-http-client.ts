@@ -6,25 +6,6 @@ import {
 } from "@/services/api-error";
 import type { HttpMethod, RequestOptions } from "@/services/http-client";
 
-const ADMIN_AUTH_STORAGE_KEY = "corehub-admin-auth";
-
-function getAdminAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = localStorage.getItem(ADMIN_AUTH_STORAGE_KEY);
-    if (!raw) return null;
-
-    const parsed = JSON.parse(raw) as {
-      state?: { token?: string | null };
-    };
-
-    return parsed.state?.token ?? null;
-  } catch {
-    return null;
-  }
-}
-
 let onUnauthorized: (() => void) | null = null;
 
 export function setAdminUnauthorizedHandler(handler: () => void): void {
@@ -44,26 +25,17 @@ class AdminHttpClient {
       body,
       headers = {},
       skipAuth = false,
-      token: explicitToken,
     } = options;
-
-    const authHeaders: Record<string, string> = {};
-    if (!skipAuth) {
-      const token = explicitToken ?? getAdminAuthToken();
-      if (token) {
-        authHeaders.Authorization = `Bearer ${token}`;
-      }
-    }
 
     let response: Response;
 
     try {
       response = await fetch(`${this.baseUrl}${endpoint}`, {
         method,
+        credentials: skipAuth ? "same-origin" : "include",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          ...authHeaders,
           ...headers,
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,

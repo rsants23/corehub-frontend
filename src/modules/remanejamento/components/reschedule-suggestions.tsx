@@ -148,6 +148,17 @@ export function RescheduleSuggestionsPage() {
                   </div>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                    {suggestion.reasonLabel}
+                  </span>
+                  {suggestion.reasonDetail && (
+                    <span className="text-muted-foreground">
+                      {suggestion.reasonDetail}
+                    </span>
+                  )}
+                </div>
+
                 {suggestion.status === "PENDING" && (
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" onClick={() => handleAccept(suggestion.id)}>
@@ -177,7 +188,8 @@ export function RescheduleSuggestionsPage() {
                   </div>
                 )}
 
-                {suggestion.status === "ACCEPTED" && (
+                {(suggestion.status === "ACCEPTED" ||
+                  suggestion.status === "APPROVED") && (
                   <Button
                     size="sm"
                     onClick={() => setSuggestionToApply(suggestion.id)}
