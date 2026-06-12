@@ -42,7 +42,7 @@ import {
 } from "@/modules/admin/utils/format";
 import { getErrorMessage } from "@/services/api-error";
 import { useToastStore } from "@/stores/toast-store";
-import type { ClinicStatus } from "@/types/admin";
+import type { AdminClinic, ClinicStatus } from "@/types/admin";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
 
 const STATUS_LABELS: Record<ClinicStatus, string> = {
@@ -67,8 +67,12 @@ export function AdminClinicsPageContent() {
     queryFn: () => adminApiService.listPlans(),
   });
 
-  const statusMutation = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: ClinicStatus }) =>
+  const statusMutation = useMutation<
+    { id: string; status: ClinicStatus },
+    Error,
+    { id: string; status: ClinicStatus }
+  >({
+    mutationFn: ({ id, status }) =>
       adminApiService.updateClinicStatus(id, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminClinics });
@@ -212,7 +216,7 @@ function CreateClinicDialog({
     licenseExpiresAt: toInputDate(new Date(Date.now() + 15 * 86400000)),
   });
 
-  const mutation = useMutation({
+  const mutation = useMutation<AdminClinic, Error, void>({
     mutationFn: () =>
       adminApiService.createClinic({
         ...form,

@@ -98,7 +98,7 @@ export function AdminPlansPageContent() {
     queryFn: () => adminApiService.listPlans(),
   });
 
-  const deactivateMutation = useMutation({
+  const deactivateMutation = useMutation<void, Error, string>({
     mutationFn: (id: string) => adminApiService.deactivatePlan(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminPlans });
@@ -219,7 +219,7 @@ function PlanFormDialog({
   const showToast = useToastStore((s) => s.showToast);
   const [form, setForm] = useState(initial);
 
-  const mutation = useMutation({
+  const mutation = useMutation<AdminPlan, Error, void>({
     mutationFn: () => onSubmit(formToPayload(form)),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminPlans });

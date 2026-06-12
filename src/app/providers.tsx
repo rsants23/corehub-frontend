@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { IdleLogoutProvider } from "@/components/providers/idle-logout-provider";
 import { ToastContainer } from "@/components/shared/toast-container";
 
 function createQueryClient() {
@@ -35,8 +36,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {children}
-        <ToastContainer />
+        <IdleLogoutProvider>
+          {children}
+          <ToastContainer />
+        </IdleLogoutProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

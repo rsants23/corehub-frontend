@@ -32,13 +32,6 @@ interface ApiOpportunitiesResponse {
   byReason: ReschedulingOpportunities["byReason"];
 }
 
-interface ApiOccupancyResponse {
-  date: string;
-  therapistOccupancy: { name: string; rate: number }[];
-  overallRate: number;
-  absenceImpactRate: number;
-}
-
 export const dashboardService = {
   async getStats(date: string): Promise<DashboardStats> {
     const [data, opportunities] = await Promise.all([

@@ -154,7 +154,11 @@ function UserRow({
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.showToast);
 
-  const statusMutation = useMutation({
+  const statusMutation = useMutation<
+    { id: string; status: string },
+    Error,
+    string
+  >({
     mutationFn: (status: string) =>
       adminApiService.updateClinicUserStatus(clinicId, user.id, status),
     onSuccess: () => {
@@ -240,8 +244,8 @@ function CreateUserDialog({
     setLinkPrompt(null);
   };
 
-  const mutation = useMutation({
-    mutationFn: (confirmLink?: boolean) =>
+  const mutation = useMutation<AdminClinicUser, Error, boolean>({
+    mutationFn: (confirmLink: boolean) =>
       adminApiService.createClinicUser(clinicId, {
         ...form,
         ...(confirmLink ? { confirmLink: true } : {}),
@@ -298,7 +302,7 @@ function CreateUserDialog({
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => mutation.mutate()} disabled={mutation.isPending}>
+            <Button onClick={() => mutation.mutate(false)} disabled={mutation.isPending}>
               {mutation.isPending ? "Criando..." : "Criar usuário"}
             </Button>
           </div>
@@ -368,7 +372,7 @@ function EditUserDialog({
 
   const open = !!user;
 
-  const mutation = useMutation({
+  const mutation = useMutation<AdminClinicUser, Error, void>({
     mutationFn: () => {
       if (!user) return Promise.reject();
       return adminApiService.updateClinicUser(clinicId, user.id, form);
@@ -439,7 +443,11 @@ function ResetPasswordDialog({
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
-  const mutation = useMutation({
+  const mutation = useMutation<
+    { id: string; passwordUpdated: boolean },
+    Error,
+    void
+  >({
     mutationFn: () => {
       if (!user) return Promise.reject();
       if (password !== confirm) {

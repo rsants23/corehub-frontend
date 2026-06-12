@@ -1,7 +1,11 @@
+import { RATE_LIMIT_LOGIN_MESSAGE } from "@/constants/session";
+
 export interface NestJsErrorBody {
   statusCode?: number;
   message?: string | string[];
   error?: string;
+  code?: string;
+  retryAfterSeconds?: number;
 }
 
 const STATUS_MESSAGES: Record<number, string> = {
@@ -11,8 +15,15 @@ const STATUS_MESSAGES: Record<number, string> = {
   404: "Recurso não encontrado.",
   409: "Conflito ao processar a operação. O registro pode já existir.",
   422: "Dados inválidos. Revise os campos do formulário.",
+  429: RATE_LIMIT_LOGIN_MESSAGE,
   500: "Erro interno do servidor. Tente novamente em instantes.",
 };
+
+const TECHNICAL_MESSAGE_PATTERNS = [
+  /throttlerexception/i,
+  /too many requests/i,
+  /internal server error/i,
+];
 
 export class ApiError extends Error {
   constructor(
@@ -38,13 +49,31 @@ function extractMessage(data: NestJsErrorBody | null | undefined): string | null
   return data.message;
 }
 
+function isTechnicalMessage(message: string): boolean {
+  return TECHNICAL_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
+}
+
+function resolveFriendlyMessage(
+  status: number,
+  data?: NestJsErrorBody | null,
+): string {
+  if (data?.code === "TOO_MANY_LOGIN_ATTEMPTS") {
+    return RATE_LIMIT_LOGIN_MESSAGE;
+  }
+
+  const apiMessage = extractMessage(data);
+  if (apiMessage && !isTechnicalMessage(apiMessage)) {
+    return apiMessage;
+  }
+
+  return STATUS_MESSAGES[status] ?? `Erro na requisição (${status}).`;
+}
+
 export function normalizeApiError(
   status: number,
   data?: NestJsErrorBody | null,
 ): ApiError {
-  const apiMessage = extractMessage(data);
-  const friendlyMessage =
-    apiMessage ?? STATUS_MESSAGES[status] ?? `Erro na requisição (${status}).`;
+  const friendlyMessage = resolveFriendlyMessage(status, data);
 
   return new ApiError(status, friendlyMessage, data ?? undefined);
 }
@@ -104,10 +133,23 @@ export function getErrorMessage(error: unknown, fallback?: string): string {
     if (identityConflict) {
       return identityConflict.message;
     }
+
+    if (error.data?.code === "TOO_MANY_LOGIN_ATTEMPTS") {
+      return RATE_LIMIT_LOGIN_MESSAGE;
+    }
+
+    if (isTechnicalMessage(error.message)) {
+      return STATUS_MESSAGES[error.status] ?? fallback ?? "Ocorreu um erro inesperado.";
+    }
+
     return error.message;
   }
 
   if (error instanceof Error) {
+    if (isTechnicalMessage(error.message)) {
+      return fallback ?? "Ocorreu um erro inesperado.";
+    }
+
     return error.message;
   }
 

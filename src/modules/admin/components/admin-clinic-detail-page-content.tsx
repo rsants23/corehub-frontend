@@ -41,6 +41,7 @@ import {
 import { getErrorMessage } from "@/services/api-error";
 import { useToastStore } from "@/stores/toast-store";
 import { useAdminAuthStore } from "@/stores/admin-auth-store";
+import type { AdminClinic, AdminInvoice, AdminSubscription, ClinicStatus } from "@/types/admin";
 
 const TABS = [
   "overview",
@@ -166,8 +167,12 @@ function OverviewTab({
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.showToast);
 
-  const statusMutation = useMutation({
-    mutationFn: (status: "ACTIVE" | "INACTIVE" | "SUSPENDED") =>
+  const statusMutation = useMutation<
+    { id: string; status: ClinicStatus },
+    Error,
+    "ACTIVE" | "INACTIVE" | "SUSPENDED"
+  >({
+    mutationFn: (status) =>
       adminApiService.updateClinicStatus(clinic.id, status),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminClinic(clinic.id) });
@@ -234,7 +239,7 @@ function LicenseTab({
     discountValue: String(subscription?.discountValue ?? 0),
   });
 
-  const saveMutation = useMutation({
+  const saveMutation = useMutation<AdminSubscription, Error, void>({
     mutationFn: () =>
       adminApiService.updateSubscription(clinicId, {
         planId: form.planId,
@@ -250,7 +255,7 @@ function LicenseTab({
     onError: (err) => showToast(getErrorMessage(err, "Erro"), "error"),
   });
 
-  const renewMutation = useMutation({
+  const renewMutation = useMutation<AdminSubscription, Error, void>({
     mutationFn: () => adminApiService.renewSubscription(clinicId, { status: "ACTIVE" }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminClinic(clinicId) });
@@ -314,7 +319,7 @@ function BillingTab({
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState(toInputDate(new Date(Date.now() + 7 * 86400000)));
 
-  const createMutation = useMutation({
+  const createMutation = useMutation<AdminInvoice, Error, void>({
     mutationFn: () =>
       adminApiService.createInvoice(clinicId, {
         subscriptionId,
@@ -327,7 +332,7 @@ function BillingTab({
     },
   });
 
-  const payMutation = useMutation({
+  const payMutation = useMutation<AdminInvoice, Error, string>({
     mutationFn: (id: string) => adminApiService.markInvoicePaid(id, { paymentMethod: "Manual" }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminClinicInvoices(clinicId) });
@@ -335,7 +340,7 @@ function BillingTab({
     },
   });
 
-  const cancelMutation = useMutation({
+  const cancelMutation = useMutation<AdminInvoice, Error, string>({
     mutationFn: (id: string) => adminApiService.cancelInvoice(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminClinicInvoices(clinicId) });
@@ -401,7 +406,7 @@ function NotesTab({
   const queryClient = useQueryClient();
   const showToast = useToastStore((s) => s.showToast);
 
-  const mutation = useMutation({
+  const mutation = useMutation<AdminClinic, Error, void>({
     mutationFn: () => adminApiService.updateClinic(clinicId, { internalNotes: value }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.adminClinic(clinicId) });
